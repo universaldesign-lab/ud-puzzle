@@ -5,6 +5,7 @@
 [한국어](#한국어) · [English](#english)
 
 ▶ **플레이하기 / Play:** https://universaldesign-lab.github.io/ud-puzzle/
+
 ▶ **English version:** https://universaldesign-lab.github.io/ud-puzzle/?lang=en
 
 ---
