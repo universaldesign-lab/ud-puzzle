@@ -1,0 +1,3039 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>보이지 않는 장벽의 미궁 — UD 도시 공간 감별사</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #0b1120;
+      --bg-panel: #111827;
+      --bg-card: #1e293b;
+      --text-main: #f8fafc;
+      --text-sub: #e2e8f0;
+      --accent-cyan: #38bdf8;
+      --accent-amber: #fbbf24;
+      --accent-green: #34d399;
+      --accent-red: #fb7185;
+      --base-font-size: 16px;
+    }
+
+    html {
+      font-size: var(--base-font-size);
+    }
+
+    body {
+      background-color: var(--bg-deep);
+      color: var(--text-main);
+      font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      line-height: 1.65;
+      letter-spacing: -0.01em;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      background-image:
+        linear-gradient(to right, rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+
+    /* 고대비 모드 */
+    body.high-contrast {
+      --bg-deep: #000000;
+      --bg-panel: #000000;
+      --bg-card: #0a0a0a;
+      --text-main: #ffffff;
+      --text-sub: #ffffff;
+      --accent-cyan: #00ffff;
+      --accent-amber: #ffff00;
+      --accent-green: #00ff66;
+      --accent-red: #ff5555;
+      background-image: none !important;
+    }
+
+    body.high-contrast .pixel-panel,
+    body.high-contrast .clue-card:not(.strobe-active) {
+      background-color: #000000 !important;
+      border-color: #ffffff !important;
+      box-shadow: 4px 4px 0px #ffffff !important;
+    }
+
+    body.high-contrast #sceneViewport > div,
+    body.high-contrast #sceneViewport > div > div:not(.strobe-active):not(.hc-keep-bg) {
+      background-color: #000000 !important;
+      border-color: #ffffff !important;
+      color: #ffffff !important;
+    }
+
+    body.high-contrast .scene-badge {
+      background-color: #000000 !important;
+      color: #ffff00 !important;
+      border: 2px solid #ffff00 !important;
+      box-shadow: 2px 2px 0px #ffffff !important;
+    }
+
+    body.high-contrast .btn-retro {
+      border-width: 2px !important;
+      box-shadow: 3px 3px 0px #ffffff !important;
+    }
+
+    /* 고대비 모드에서 어두운 픽셀 디테일(#020617 등)이 검은 배경에 묻히지 않도록 밝은 회색+외곽선 부여 */
+    body.high-contrast svg.pixel-art-svg rect[fill="#020617"],
+    body.high-contrast svg.pixel-art-svg rect[fill="#0f172a"],
+    body.high-contrast svg.pixel-art-svg rect[fill="#1e293b"] {
+      fill: #475569 !important;
+      stroke: #e2e8f0 !important;
+      stroke-width: 0.35px !important;
+    }
+
+    /* 픽셀아트 프레임 & 박스 */
+    .pixel-panel {
+      background-color: var(--bg-panel);
+      border: 3px solid #475569;
+      border-radius: 0px !important;
+      box-shadow:
+        inset -3px -3px 0px #090d16,
+        inset 3px 3px 0px #334155,
+        6px 6px 0px rgba(0, 0, 0, 0.75);
+    }
+
+    .pixel-box {
+      border: 2px solid #64748b;
+      border-radius: 0px !important;
+      box-shadow:
+        inset -2px -2px 0px rgba(0,0,0,0.55),
+        inset 2px 2px 0px rgba(255,255,255,0.12),
+        4px 4px 0px rgba(0,0,0,0.65);
+    }
+
+    .btn-retro {
+      border-radius: 0px !important;
+      border: 2px solid #94a3b8;
+      box-shadow:
+        inset -2px -2px 0px rgba(0, 0, 0, 0.55),
+        inset 2px 2px 0px rgba(255, 255, 255, 0.25),
+        4px 4px 0px #020617;
+      transition: transform 0.06s steps(2), box-shadow 0.06s steps(2), background-color 0.1s;
+    }
+    .btn-retro:hover:not(:disabled) {
+      transform: translate(-1px, -1px);
+      box-shadow:
+        inset -2px -2px 0px rgba(0, 0, 0, 0.55),
+        inset 2px 2px 0px rgba(255, 255, 255, 0.35),
+        5px 5px 0px #020617;
+    }
+    .btn-retro:active:not(:disabled) {
+      transform: translate(3px, 3px);
+      box-shadow:
+        inset 2px 2px 0px rgba(0, 0, 0, 0.6),
+        1px 1px 0px #020617;
+    }
+    .btn-retro:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    button:focus-visible, input:focus-visible, a:focus-visible {
+      outline: 3px solid #fbbf24 !important;
+      outline-offset: 2px !important;
+    }
+
+    .clue-card {
+      cursor: pointer;
+      border-radius: 0px !important;
+      border: 2px solid #475569;
+      box-shadow:
+        inset -2px -2px 0px rgba(0,0,0,0.5),
+        inset 2px 2px 0px rgba(255,255,255,0.1),
+        4px 4px 0px rgba(0,0,0,0.65);
+      transition: transform 0.08s steps(2), border-color 0.12s, box-shadow 0.08s steps(2);
+      text-align: left;
+    }
+    .clue-card:hover {
+      transform: translate(-2px, -2px);
+      border-color: #fbbf24 !important;
+      box-shadow:
+        inset -2px -2px 0px rgba(0,0,0,0.5),
+        inset 2px 2px 0px rgba(255,255,255,0.2),
+        6px 6px 0px rgba(251, 191, 36, 0.35);
+    }
+    .clue-card:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px rgba(0,0,0,0.7);
+    }
+
+    .scene-badge {
+      background-color: rgba(15, 23, 42, 0.96);
+      border: 2px solid #64748b;
+      border-radius: 0px !important;
+      box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.65);
+      padding: 0.35rem 0.7rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    @keyframes strobeFlash {
+      0%, 100% { background-color: #ef4444; box-shadow: 0 0 25px #ef4444, 0 0 50px #f87171; border-color: #ffffff; }
+      50% { background-color: #1e293b; box-shadow: none; border-color: #64748b; }
+    }
+    .strobe-active {
+      animation: strobeFlash 0.65s infinite;
+    }
+
+    @keyframes shakeError {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .shake-error {
+      animation: shakeError 0.35s ease-in-out;
+    }
+
+    /* 움직임 줄이기(prefers-reduced-motion) 설정 대응:
+       스테이지 3의 핵심인 시각경보(.strobe-active)는 끄지 않고 1.2초 주기로 완만하게 깜빡이도록 예외 처리 (광과민성 기준 초당 3회보다 훨씬 느림) */
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .strobe-active {
+        animation: strobeFlash 1.2s ease-in-out infinite !important;
+      }
+      .shake-error {
+        animation: none !important;
+      }
+    }
+
+    /* 문구 속 이모지를 대신하는 픽셀 아이콘 */
+    .pixel-emoji {
+      display: inline-block;
+      line-height: 0;
+      vertical-align: -0.15em;
+    }
+
+    .pixel-art-svg {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      shape-rendering: crispEdges;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    .rounded, .rounded-sm, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-full {
+      border-radius: 0px !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-2 sm:p-4 md:p-6 select-none">
+
+  <!-- 상단 헤더 & 접근성 컨트롤 바 -->
+  <header class="max-w-6xl w-full mx-auto mb-3">
+    <div class="pixel-panel px-3 py-2.5 sm:px-5 sm:py-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <span class="inline-flex items-center px-2.5 py-1 bg-amber-400 text-slate-950 font-black text-xs sm:text-sm tracking-wide border-2 border-slate-950 shadow-[2px_2px_0px_#000]">
+          UD LABYRINTH
+        </span>
+        <h1 id="headerTitle" class="text-base sm:text-lg md:text-xl font-extrabold text-white tracking-tight">
+          보이지 않는 장벽의 미궁
+        </h1>
+      </div>
+
+      <!-- 진행도 & 접근성 도구 모음 -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
+        <!-- 스테이지 진행 점 (1~7) -->
+        <div id="stageDots" class="flex items-center gap-1 bg-slate-900 px-2 py-1.5 border-2 border-slate-600" role="group" aria-label="스테이지 진행 상황">
+          <!-- JS 렌더링 -->
+        </div>
+
+        <!-- 점수 배지 -->
+        <div class="bg-slate-900 px-2.5 py-1 border-2 border-slate-600 text-xs sm:text-sm flex items-center gap-1.5">
+          <span id="scoreLabel" class="text-slate-300 font-semibold">감별 점수</span>
+          <span id="scoreDisplay" class="text-amber-400 font-black text-sm sm:text-base">100</span>
+        </div>
+
+        <!-- 한/영 언어 전환 버튼 -->
+        <button id="langToggleBtn" onclick="toggleLanguage()" type="button" class="btn-retro px-2.5 py-1 bg-indigo-900 hover:bg-indigo-800 text-indigo-100 border-indigo-400 text-xs sm:text-sm font-extrabold flex items-center gap-1" aria-label="Change Language 한국어 또는 English 전환">
+          <span class="px-icon" data-icon="🌐" data-size="16"></span>
+          <span id="langToggleLabel">KO | EN</span>
+        </button>
+
+        <!-- 글자 크기 조절 버튼 -->
+        <div class="flex items-center bg-slate-900 border-2 border-slate-600 p-0.5" role="group" aria-label="글자 크기 조절">
+          <button onclick="setFontSize(16)" id="fontBtn1" type="button" class="px-2 py-0.5 text-xs font-bold bg-sky-500 text-slate-950" title="기본 글자 크기">가</button>
+          <button onclick="setFontSize(18)" id="fontBtn2" type="button" class="px-2 py-0.5 text-xs font-bold text-slate-200 hover:bg-slate-800" title="큰 글자 크기">가+</button>
+          <button onclick="setFontSize(20)" id="fontBtn3" type="button" class="px-2 py-0.5 text-xs font-bold text-slate-200 hover:bg-slate-800" title="더 큰 글자 크기">가++</button>
+        </div>
+
+        <!-- 고대비 모드 토글 -->
+        <button id="contrastBtn" onclick="toggleHighContrast()" type="button" class="btn-retro px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs sm:text-sm font-bold flex items-center gap-1" aria-pressed="false">
+          <span class="px-icon" data-icon="👁️" data-size="16"></span>
+          <span id="contrastLabel">고대비 OFF</span>
+        </button>
+
+        <!-- UD 7대 원칙 수첩 모달 버튼 -->
+        <button id="guideOpenBtn" onclick="toggleGuideModal()" type="button" class="btn-retro px-2.5 py-1 bg-sky-900 hover:bg-sky-800 text-sky-100 border-sky-400 text-xs sm:text-sm font-bold flex items-center gap-1">
+          <span class="px-icon" data-icon="📘" data-size="16"></span>
+          <span id="guideBtnLabel">UD수첩</span>
+        </button>
+
+        <!-- 효과음 토글 -->
+        <button id="soundBtn" onclick="toggleSound()" type="button" class="btn-retro px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs sm:text-sm font-bold flex items-center gap-1" aria-pressed="true">
+          <span id="soundIconWrap"><span class="px-icon" data-icon="🔊" data-size="16"></span></span>
+          <span id="soundLabel">효과음 ON</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 게임 컨테이너 -->
+  <main class="max-w-6xl w-full mx-auto flex-1 flex flex-col justify-center">
+
+    <!-- 1. 인트로(타이틀) 화면 -->
+    <section id="introScreen" class="pixel-panel p-5 sm:p-8 md:p-10">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        <!-- 좌측 16비트 픽셀 아트 타이틀 배너 -->
+        <div class="lg:col-span-5 bg-slate-950 border-4 border-slate-600 p-4 flex flex-col items-center justify-center relative overflow-hidden min-h-[270px] shadow-[inset_0_0_0_3px_#020617,6px_6px_0px_#000]">
+          <!-- 정통 32x24 픽셀아트 타이틀 씬 SVG -->
+          <svg viewBox="0 0 64 48" class="w-full max-w-[320px] h-auto pixel-art-svg border-2 border-slate-700 bg-[#0b1120]" aria-label="도시의 계단 장벽을 초록색 유니버설디자인 경사로로 바꾸는 16비트 픽셀 아트">
+            <rect width="64" height="48" fill="#090d1a"/>
+            <!-- 픽셀 별빛 & 달 -->
+            <rect x="6" y="4" width="1" height="1" fill="#fde047"/>
+            <rect x="18" y="7" width="1" height="1" fill="#ffffff"/>
+            <rect x="33" y="3" width="1" height="1" fill="#38bdf8"/>
+            <rect x="46" y="6" width="1" height="1" fill="#fde047"/>
+            <rect x="54" y="4" width="4" height="4" fill="#fde047"/>
+            <rect x="56" y="4" width="2" height="2" fill="#090d1a"/>
+
+            <!-- 원경 빌딩 스카이라인 (픽셀 블록) -->
+            <rect x="3" y="16" width="11" height="24" fill="#1e293b"/>
+            <rect x="5" y="19" width="2" height="2" fill="#fbbf24"/>
+            <rect x="9" y="19" width="2" height="2" fill="#38bdf8"/>
+            <rect x="5" y="23" width="2" height="2" fill="#fbbf24"/>
+            <rect x="9" y="27" width="2" height="2" fill="#fbbf24"/>
+
+            <rect x="16" y="11" width="14" height="29" fill="#334155"/>
+            <rect x="18" y="14" width="2" height="2" fill="#fde047"/>
+            <rect x="22" y="14" width="2" height="2" fill="#fde047"/>
+            <rect x="26" y="14" width="2" height="2" fill="#94a3b8"/>
+            <rect x="18" y="18" width="2" height="2" fill="#38bdf8"/>
+            <rect x="22" y="18" width="2" height="2" fill="#fde047"/>
+            <rect x="26" y="22" width="2" height="2" fill="#fde047"/>
+            <rect x="18" y="26" width="2" height="2" fill="#fde047"/>
+
+            <!-- 시청/공공건물(우측) -->
+            <rect x="34" y="8" width="26" height="32" fill="#1e293b"/>
+            <rect x="36" y="6" width="22" height="2" fill="#475569"/>
+            <rect x="41" y="4" width="12" height="2" fill="#64748b"/>
+            <!-- 건물 기둥 & 입구 -->
+            <rect x="37" y="11" width="3" height="17" fill="#94a3b8"/>
+            <rect x="43" y="11" width="3" height="17" fill="#94a3b8"/>
+            <rect x="49" y="11" width="3" height="17" fill="#94a3b8"/>
+            <rect x="55" y="11" width="3" height="17" fill="#94a3b8"/>
+            <rect x="45" y="18" width="6" height="10" fill="#fde047"/>
+
+            <!-- 붉은 계단 장벽 (좌측 하단) -->
+            <rect x="24" y="36" width="10" height="4" fill="#ef4444"/>
+            <rect x="27" y="32" width="7" height="4" fill="#dc2626"/>
+            <rect x="30" y="28" width="4" height="4" fill="#b91c1c"/>
+
+            <!-- 초록색 UD 픽셀 경사로 (계단 옆 연결) -->
+            <rect x="34" y="28" width="18" height="2" fill="#10b981"/>
+            <rect x="36" y="30" width="18" height="2" fill="#10b981"/>
+            <rect x="38" y="32" width="18" height="2" fill="#059669"/>
+            <rect x="40" y="34" width="18" height="2" fill="#059669"/>
+            <rect x="42" y="36" width="18" height="4" fill="#047857"/>
+
+            <!-- 픽셀 캐릭터 (휠체어 이용자 + 보행자) -->
+            <rect x="11" y="31" width="3" height="3" fill="#fcd34d"/>
+            <rect x="11" y="34" width="4" height="3" fill="#38bdf8"/>
+            <rect x="10" y="36" width="5" height="4" fill="#fbbf24"/>
+            <rect x="11" y="37" width="3" height="2" fill="#090d1a"/>
+
+            <rect x="19" y="30" width="3" height="3" fill="#c68642"/>
+            <rect x="19" y="33" width="3" height="4" fill="#f43f5e"/>
+            <rect x="19" y="37" width="1" height="3" fill="#e2e8f0"/>
+            <rect x="21" y="37" width="1" height="3" fill="#e2e8f0"/>
+
+            <!-- 픽셀 돋보기 아이콘 (상단 포인트) -->
+            <rect x="7" y="9" width="5" height="1" fill="#38bdf8"/>
+            <rect x="6" y="10" width="1" height="4" fill="#38bdf8"/>
+            <rect x="12" y="10" width="1" height="4" fill="#38bdf8"/>
+            <rect x="7" y="14" width="5" height="1" fill="#38bdf8"/>
+            <rect x="7" y="10" width="5" height="4" fill="#0ea5e9" fill-opacity="0.35"/>
+            <rect x="12" y="14" width="2" height="2" fill="#fbbf24"/>
+            <rect x="14" y="16" width="2" height="2" fill="#fbbf24"/>
+
+            <!-- 바닥 도로 타일 -->
+            <rect x="0" y="40" width="64" height="8" fill="#0f172a"/>
+            <rect x="0" y="40" width="64" height="1" fill="#475569"/>
+            <rect x="4" y="44" width="6" height="1" fill="#fbbf24"/>
+            <rect x="16" y="44" width="6" height="1" fill="#fbbf24"/>
+            <rect x="28" y="44" width="6" height="1" fill="#fbbf24"/>
+            <rect x="40" y="44" width="6" height="1" fill="#fbbf24"/>
+            <rect x="52" y="44" width="6" height="1" fill="#fbbf24"/>
+          </svg>
+
+          <div class="mt-3 text-center">
+            <p class="text-amber-400 font-black text-xs sm:text-sm tracking-widest">UNIVERSAL DESIGN QUEST</p>
+            <p id="introBannerSub" class="text-slate-200 text-xs sm:text-sm mt-1 font-medium">도서관 · 카페 · 지하상가 · 지하철 · 광장 · 시청까지 7개의 미궁</p>
+          </div>
+        </div>
+
+        <!-- 우측브리핑 텍스트 -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="inline-block px-3 py-1 bg-sky-950 text-sky-300 border-2 border-sky-500 text-xs sm:text-sm font-bold" id="introRoleBadge">
+            신임 도시 공간 감별사 임명장
+          </div>
+          <h2 id="introHeading" class="text-2xl sm:text-3xl font-black text-white leading-tight">
+            “누군가에게는 평범한 일상이,<br/>누군가에게는 <span class="text-amber-400 underline decoration-2 underline-offset-4">보이지 않는 미궁</span>입니다.”
+          </h2>
+          <p id="introDesc" class="text-slate-100 text-base sm:text-lg leading-relaxed">
+            당신은 시민들의 불편 민원이 접수된 <strong>7곳의 일상 공간</strong>에 파견되었습니다.
+            도서관 입구부터 무인 카페, 지하 쇼핑몰, 지하철 개찰구와 환승역, 광장 횡단보도, 그리고 시청 본관까지—사람들을 가로막는 <strong>진짜 원인(Bad Design)</strong>을 찾아 모두를 위한 <strong>유니버설디자인(Universal Design) 7대 원칙</strong>으로 해결해 주세요!
+          </p>
+
+          <div class="bg-slate-900/95 border-2 border-slate-600 p-4 space-y-2 text-sm sm:text-base">
+            <div id="introHowToTitle" class="font-bold text-amber-300 flex items-center gap-1.5">
+              <span class="px-icon" data-icon="🔍" data-size="18"></span>
+              <span>플레이 방법 (전 연령·키보드·다국어 지원)</span>
+            </div>
+            <ul id="introHowToList" class="list-disc list-inside text-slate-100 space-y-1">
+              <li>화면 속 <strong>사람들과 시설물 단서 버튼</strong>을 클릭(또는 Tab·Enter 키)해 현장을 조사하세요.</li>
+              <li>각 스테이지의 <strong>[체험 스위치]</strong>를 눌러 시야 높이, 색약 시야, 개찰구 폭, 보행섬 유무를 직접 비교해 보세요.</li>
+              <li>아래 <strong>보기 버튼</strong>을 눌러 입력창에 넣거나 직접 정답을 입력한 뒤 <strong>[판정]</strong> 버튼을 누르면 다음 공간이 열립니다!</li>
+            </ul>
+          </div>
+
+          <div class="pt-2 flex flex-wrap gap-3">
+            <button id="introStartBtn" onclick="startGame()" type="button" class="btn-retro px-7 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-base sm:text-lg border-slate-950 flex items-center gap-2">
+              <span class="px-icon" data-icon="🔎" data-size="20"></span>
+              <span>현장 조사 시작하기 (STAGE 1)</span>
+            </button>
+            <button id="introGuideBtn" onclick="toggleGuideModal()" type="button" class="btn-retro px-5 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-base border-slate-500 flex items-center gap-1.5">
+              <span class="px-icon" data-icon="📘" data-size="18"></span>
+              <span>UD 7대 원칙 먼저 보기</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 본 게임 스테이지 화면 -->
+    <section id="stageScreen" class="hidden space-y-4">
+      <!-- 상단 스테이지 타이틀 & 원칙 배지 -->
+      <div class="pixel-panel px-4 py-3 sm:px-6 sm:py-3.5 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+          <span id="stageBadge" class="px-3 py-1 bg-amber-400 text-slate-950 font-black text-xs sm:text-sm border-2 border-slate-950">
+            STAGE 1 / 7
+          </span>
+          <h2 id="stageTitle" class="text-lg sm:text-xl md:text-2xl font-black text-white">
+            닫힌 문 앞에서
+          </h2>
+        </div>
+        <div id="stageSubtitle" class="text-xs sm:text-sm font-bold px-3 py-1 bg-slate-800 text-sky-300 border-2 border-slate-600">
+          관련 가치: 적은 신체적 노력 & 유연한 사용
+        </div>
+      </div>
+
+      <!-- 메인 2단 그리드: 좌측 시각적 단서 씬 / 우측 문제·입력·해설 패널 -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+
+        <!-- 좌측: 인터랙티브 현장 조사 뷰포트 (7칸) -->
+        <div class="lg:col-span-7 pixel-panel p-3 sm:p-5 flex flex-col justify-between">
+          <!-- 상단 안내 및 체험 스위치 바 -->
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2.5 border-b-2 border-slate-700">
+            <span id="clueHeaderLabel" class="text-xs sm:text-sm font-bold text-amber-300 flex items-center gap-1.5">
+              <span class="px-icon" data-icon="👆" data-size="18"></span>
+              <span>현장 단서 클릭 조사 (인물이나 장치를 클릭 또는 Tab으로 선택하세요)</span>
+            </span>
+            <div id="simulatorControlArea">
+              <!-- 스테이지별 체험 토글 스위치 -->
+            </div>
+          </div>
+
+          <!-- 인터랙티브 씬 컨테이너 -->
+          <div id="sceneViewport" class="relative w-full min-h-[300px] sm:min-h-[340px] bg-slate-950 border-2 border-slate-600 p-3 sm:p-4 flex flex-col justify-between overflow-hidden">
+            <!-- JS에서 스테이지별 맞춤형 씬 렌더링 -->
+          </div>
+
+          <!-- 클릭한 단서 상세 대사창 -->
+          <div id="clueDialogBox" class="mt-3 bg-slate-900 border-2 border-sky-500/80 p-3.5 sm:p-4 min-h-[92px] flex items-start gap-3 shadow-[inset_0_0_0_2px_#020617]" aria-live="polite">
+            <div id="clueIcon" class=" shrink-0 mt-0.5"><span class="px-icon" data-icon="🔍" data-size="28"></span></div>
+            <div class="flex-1">
+              <div id="clueSpeaker" class="text-xs sm:text-sm font-extrabold text-sky-300 mb-0.5">
+                현장 조사 로그
+              </div>
+              <p id="clueText" class="text-slate-100 text-sm sm:text-base font-medium leading-relaxed">
+                위 화면에서 어려움을 겪고 있는 시민이나 문제의 시설물을 눌러 단서를 확인하세요.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 우측: 미궁 추리 & 정답 판정 패널 (5칸) -->
+        <div class="lg:col-span-5 pixel-panel p-4 sm:p-6 flex flex-col justify-between space-y-4">
+          <div class="space-y-4">
+            <!-- 문제 상황 카드 -->
+            <div class="bg-slate-900 border-2 border-slate-600 p-4 shadow-[inset_0_0_0_2px_#020617]">
+              <div class="flex items-center justify-between mb-2">
+                <span id="problemBoxLabel" class="text-xs sm:text-sm font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span class="px-icon" data-icon="📋" data-size="16"></span>
+                  <span>현장 민원 브리핑</span>
+                </span>
+                <span id="stageStatusPill" class="text-xs font-bold px-2.5 py-0.5 bg-rose-950 text-rose-200 border border-rose-500">
+                  미해결 장벽
+                </span>
+              </div>
+              <p id="problemDescription" class="text-slate-100 text-base leading-relaxed font-normal">
+                <!-- 스테이지 문제 텍스트 -->
+              </p>
+            </div>
+
+            <!-- 관련 페르소나 태그 -->
+            <div>
+              <div id="personaHeaderLabel" class="text-xs font-bold text-slate-300 mb-1.5">이 공간에서 배제된 시민들:</div>
+              <div id="personaTags" class="flex flex-wrap gap-1.5">
+                <!-- JS 렌더링 -->
+              </div>
+            </div>
+
+            <!-- 정답 입력 폼 -->
+            <div class="bg-slate-900/95 border-2 border-slate-600 p-4 space-y-3">
+              <label for="answerInput" id="answerLabel" class="block text-sm sm:text-base font-extrabold text-sky-300">
+                🔑 무엇으로 바꾸거나 어떤 원칙을 적용해야 할까요?
+              </label>
+
+              <div class="flex gap-2">
+                <input
+                  id="answerInput"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="정답 입력 또는 아래 보기 선택"
+                  class="flex-1 bg-slate-950 text-white placeholder-slate-400 px-3.5 py-2.5 border-2 border-slate-500 text-base font-bold focus:outline-none"
+                  onkeydown="if(event.key === 'Enter') checkAnswer()"
+                />
+                <button
+                  id="submitBtn"
+                  type="button"
+                  onclick="checkAnswer()"
+                  class="btn-retro px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-base border-slate-950 shrink-0"
+                >
+                  판정
+                </button>
+              </div>
+
+              <!-- 선택형 보기 칩 -->
+              <div class="pt-1">
+                <div id="choiceChipDesc" class="text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1">
+                  <span class="px-icon" data-icon="👆" data-size="15"></span>
+                  <span>보기 (누르면 입력창에 들어가며, [판정] 버튼을 눌러 제출하세요):</span>
+                </div>
+                <div id="choiceChips" class="flex flex-wrap gap-1.5">
+                  <!-- JS 렌더링 -->
+                </div>
+              </div>
+
+              <!-- 힌트 버튼 & 피드백 메시지 -->
+              <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                <button
+                  id="hintBtn"
+                  type="button"
+                  onclick="toggleHint()"
+                  class="btn-retro px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border-amber-500/60 text-xs sm:text-sm font-bold flex items-center gap-1.5"
+                >
+                  <span class="px-icon" data-icon="💡" data-size="16"></span>
+                  <span id="hintBtnText">힌트 보기 (-5점)</span>
+                </button>
+                <span id="acceptedKeywordsHint" class="text-xs text-slate-300 font-medium">
+                  단답형·문장형 모두 인식됩니다
+                </span>
+              </div>
+
+              <!-- 힌트 박스 -->
+              <div id="hintBox" class="hidden bg-amber-950/80 border-2 border-amber-400 p-3 text-amber-100 text-sm leading-relaxed">
+                <!-- JS 힌트 텍스트 -->
+              </div>
+
+              <!-- 오답/함정 피드백 박스 -->
+              <div id="feedbackBox" class="hidden p-3 text-sm font-bold leading-relaxed border-2" role="alert">
+                <!-- JS 피드백 텍스트 -->
+              </div>
+            </div>
+
+            <!-- 클리어 해설 박스 -->
+            <div id="clearBox" class="hidden bg-emerald-950/90 border-2 border-emerald-400 p-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <span id="clearBadgeText" class="text-emerald-300 font-black text-base flex items-center gap-1.5">
+                  <span class="px-icon" data-icon="🎉" data-size="20"></span>
+                  <span>장벽 해결 완료!</span>
+                </span>
+                <span id="principleTag" class="text-xs font-extrabold px-2.5 py-1 bg-emerald-400 text-slate-950 border border-slate-950">
+                  UD 원칙
+                </span>
+              </div>
+              <p id="clearExplanation" class="text-white text-sm sm:text-base leading-relaxed font-normal">
+                <!-- 해설 내용 -->
+              </p>
+              <button
+                id="nextStageBtn"
+                type="button"
+                onclick="goNextStage()"
+                class="btn-retro w-full py-3 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-base border-slate-950 flex items-center justify-center gap-2"
+              >
+                <span id="nextStageBtnText">다음 현장으로 이동하기</span>
+                <span class="px-icon" data-icon="➡️" data-size="18"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 하단 스테이지 이동 내비게이션 -->
+          <div class="pt-2 border-t-2 border-slate-700 flex items-center justify-between text-xs sm:text-sm">
+            <button id="prevStageBtn" type="button" onclick="navigateStage(-1)" class="btn-retro px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold">
+              ◀ 이전 스테이지
+            </button>
+            <span id="progressText" class="text-slate-300 font-bold">해결한 공간: 0 / 7</span>
+            <button id="skipStageBtn" type="button" onclick="navigateStage(1)" class="btn-retro px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold">
+              다음 스테이지 ▶
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. 엔딩(수료증 & 리포트) 화면 -->
+    <section id="endingScreen" class="hidden pixel-panel p-5 sm:p-8 md:p-10">
+      <div class="max-w-4xl mx-auto space-y-6">
+        <div class="text-center space-y-2 border-b-2 border-slate-700 pb-6">
+          <div id="endingCertBadge" class="inline-block px-3.5 py-1 bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm border-2 border-slate-950 mb-1">
+            UNIVERSAL DESIGN MASTER CERTIFICATE
+          </div>
+          <h2 id="endingTitle" class="text-2xl sm:text-3xl md:text-4xl font-black text-white">
+            도시 공간 감별사 수료증
+          </h2>
+          <p id="endingSubtitle" class="text-slate-200 text-base sm:text-lg">
+            당신은 일상 속 7개의 보이지 않는 장벽을 모두 찾아내어<br class="hidden sm:inline"/>
+            누구나 존중받는 <strong>유니버설디자인(UD) 7대 원칙 도시</strong>를 완성했습니다!
+          </p>
+          <div class="pt-3 flex flex-wrap justify-center gap-3">
+            <div class="bg-slate-900 border-2 border-amber-400 px-5 py-2.5">
+              <span id="endingScoreLabel" class="text-xs text-slate-300 block">최종 감별 점수</span>
+              <span id="finalScoreText" class="text-2xl font-black text-amber-400">100점</span>
+            </div>
+            <div class="bg-slate-900 border-2 border-sky-400 px-5 py-2.5">
+              <span id="endingRankLabel" class="text-xs text-slate-300 block">감별사 등급</span>
+              <span id="finalRankText" class="text-lg font-black text-sky-300 flex items-center gap-1.5 justify-center">
+                <span class="px-icon" data-icon="🌟" data-size="20"></span>
+                <span>모두의 도시 수석 디자이너</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7개 스테이지 Before / After 요약 -->
+        <div class="space-y-3">
+          <h3 id="endingSummaryHeading" class="text-lg font-extrabold text-amber-300 flex items-center gap-2">
+            <span class="px-icon" data-icon="📊" data-size="20"></span>
+            <span>내가 바꾼 7가지 일상 공간 리포트 (UD 7대 원칙 완결)</span>
+          </h3>
+          <div id="summaryGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <!-- JS 렌더링 -->
+          </div>
+        </div>
+
+        <!-- 핵심 메시지 -->
+        <div class="bg-slate-900 border-2 border-emerald-400 p-5 space-y-2">
+          <div id="endingTakeawayTitle" class="font-black text-emerald-300 text-base sm:text-lg flex items-center gap-1.5">
+            <span class="px-icon" data-icon="💡" data-size="20"></span>
+            <span>유니버설디자인이 전하는 핵심 메시지</span>
+          </div>
+          <p id="endingTakeawayBody" class="text-slate-100 text-sm sm:text-base leading-relaxed">
+            유니버설디자인은 특정 누군가만을 위한 ‘특별 배려’가 아닙니다.
+            둥근 문손잡이를 <strong>레버</strong>로 바꾸고, 키오스크에 <strong>낮은 화면</strong>을 넣고, 비상벨에 <strong>경광등</strong>을 달고, 지하철에 <strong>넓은 개찰구</strong>와 <strong>기호 안내선</strong>을 만들고, 넓은 횡단보도 중앙에 <strong>보행섬</strong>을 두고, 시청 정문에 <strong>경사 광장</strong>을 만드는 순간—어린이, 어르신, 여행객, 부상자, 장애인, 그리고 양손에 짐을 든 우리 모두가 안전하고 당당하게 일상을 누릴 수 있습니다.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-3 pt-2">
+          <button id="endingRestartBtn" type="button" onclick="restartGame()" class="btn-retro px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-base border-slate-950 flex items-center gap-1.5">
+            <span class="px-icon" data-icon="🔄" data-size="18"></span>
+            <span>처음부터 다시 플레이하기</span>
+          </button>
+          <button id="endingGuideBtn" type="button" onclick="toggleGuideModal()" class="btn-retro px-6 py-3 bg-sky-900 hover:bg-sky-800 text-white font-bold text-base border-sky-400 flex items-center gap-1.5">
+            <span class="px-icon" data-icon="📘" data-size="18"></span>
+            <span>유니버설디자인 7대 원칙 수첩 열기</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- UD 7대 원칙 수첩 모달 -->
+  <div id="guideModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="guideModalTitle" onkeydown="handleModalKeydown(event)">
+    <div class="pixel-panel max-w-2xl w-full p-5 sm:p-6 max-h-[85vh] overflow-y-auto space-y-4">
+      <div class="flex items-center justify-between border-b-2 border-slate-700 pb-3">
+        <h3 id="guideModalTitle" class="text-lg sm:text-xl font-black text-amber-300 flex items-center gap-2">
+          <span class="px-icon" data-icon="📘" data-size="22"></span>
+          <span>유니버설디자인(UD) 7대 원칙 수첩</span>
+        </h3>
+        <button id="guideModalCloseTopBtn" type="button" onclick="toggleGuideModal()" class="btn-retro px-3 py-1 bg-rose-700 hover:bg-rose-600 text-white font-bold text-sm">
+          닫기 ✕
+        </button>
+      </div>
+      <p id="guideModalDesc" class="text-slate-200 text-sm sm:text-base leading-relaxed">
+        로널드 메이스(Ronald Mace)와 노스캐롤라이나 주립대 연구진이 정립한 <strong>유니버설디자인 7대 원칙</strong>입니다. 연령, 성별, 국적, 장애 유무에 관계없이 누구나 처음부터 공평하고 편리하게 사용할 수 있는 환경의 기준입니다.
+      </p>
+      <div id="guidePrinciplesList" class="space-y-2.5 text-sm sm:text-base">
+        <!-- JS 렌더링 -->
+      </div>
+      <div class="pt-2 text-right">
+        <button id="guideModalCloseBottomBtn" type="button" onclick="toggleGuideModal()" class="btn-retro px-5 py-2 bg-amber-400 text-slate-950 font-black text-sm">
+          확인 완료
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="max-w-6xl w-full mx-auto mt-4 text-center text-xs sm:text-sm text-slate-300 py-2">
+    <p id="footerNotice">유니버설디자인 인식 개선 교육용 인터랙티브 미궁게임 · 키보드(Tab/Enter) 및 글자 크기·고대비·한영 전환 지원</p>
+    <p class="mt-1 text-slate-400 font-semibold">© 2026 universaldesign-lab (vbv). All rights reserved. · v1.0.0</p>
+  </footer>
+
+  <script>
+    // =========================================================================
+    // 16비트 픽셀 아트 아이콘 렌더러 (이모지 대신 도트 그리드 SVG 출력 + 피부·머리색 다양화)
+    // =========================================================================
+    const PIXEL_SPRITES = {
+      '📚': [
+        [2,3,12,3,'#ef4444'],[2,5,12,1,'#b91c1c'],[3,4,10,1,'#fef2f2'],
+        [1,7,13,3,'#3b82f6'],[1,9,13,1,'#1d4ed8'],[2,8,11,1,'#eff6ff'],
+        [2,11,13,3,'#10b981'],[2,13,13,1,'#047857'],[3,12,11,1,'#ecfdf5']
+      ],
+      '👵': [
+        // 은발 어르신 + 따뜻한 중간 피부톤(#eab676)
+        [5,1,6,2,'#cbd5e1'],[3,3,10,3,'#e2e8f0'],[4,6,8,6,'#eab676'],
+        [4,8,3,2,'#020617'],[9,8,3,2,'#020617'],[7,8,2,1,'#fbbf24'],
+        [5,9,1,1,'#38bdf8'],[10,9,1,1,'#38bdf8'],[6,11,4,1,'#b45309'],
+        [3,12,10,3,'#a855f7']
+      ],
+      '🧒': [
+        // 곱슬 흑갈색 머리 + 갈색 피부톤(#c68642) 어린이
+        [3,2,10,2,'#3b2219'],[2,4,12,2,'#3b2219'],[4,5,8,7,'#c68642'],
+        [5,7,2,2,'#020617'],[9,7,2,2,'#020617'],[6,10,4,1,'#7c2d12'],
+        [4,12,8,3,'#38bdf8'],[3,8,1,2,'#38bdf8'],[12,9,1,2,'#38bdf8']
+      ],
+      '♿': [
+        [6,2,3,3,'#fbbf24'],[6,5,3,5,'#38bdf8'],[6,8,5,2,'#38bdf8'],
+        [10,9,2,4,'#38bdf8'],[3,8,6,6,'#e2e8f0'],[4,9,4,4,'#0f172a'],
+        [11,12,2,2,'#fbbf24']
+      ],
+      '🚪': [
+        [3,1,10,14,'#92400e'],[4,2,8,12,'#b45309'],[5,3,6,4,'#38bdf8'],
+        [5,8,6,5,'#78350f'],[10,8,2,2,'#fbbf24']
+      ],
+      '🔑': [
+        [2,5,6,6,'#fbbf24'],[4,7,2,2,'#0f172a'],[8,7,6,2,'#fbbf24'],
+        [10,9,2,3,'#fbbf24'],[13,9,1,2,'#fbbf24']
+      ],
+      '🔍': [
+        [3,2,7,7,'#38bdf8'],[4,3,5,5,'#0ea5e9'],[5,4,2,2,'#e0f2fe'],
+        [9,9,2,2,'#94a3b8'],[10,10,4,4,'#fbbf24']
+      ],
+      '🔎': [
+        [4,2,7,7,'#38bdf8'],[5,3,5,5,'#0ea5e9'],[6,4,2,2,'#e0f2fe'],
+        [3,9,2,2,'#94a3b8'],[2,10,3,4,'#fbbf24']
+      ],
+      '💡': [
+        [5,2,6,2,'#fde047'],[3,4,10,5,'#fde047'],[5,9,6,2,'#facc15'],
+        [6,4,2,2,'#ffffff'],[5,11,6,2,'#94a3b8'],[6,13,4,2,'#64748b']
+      ],
+      '🔊': [
+        [2,6,3,4,'#94a3b8'],[5,4,3,8,'#e2e8f0'],[10,5,1,2,'#38bdf8'],
+        [10,9,1,2,'#38bdf8'],[12,3,1,3,'#fbbf24'],[12,10,1,3,'#fbbf24'],
+        [14,6,1,4,'#38bdf8']
+      ],
+      '🔇': [
+        [2,6,3,4,'#64748b'],[5,4,3,8,'#94a3b8'],[10,5,2,2,'#ef4444'],
+        [12,7,2,2,'#ef4444'],[10,9,2,2,'#ef4444'],[14,5,1,2,'#ef4444'],
+        [14,9,1,2,'#ef4444']
+      ],
+      '📘': [
+        [3,2,10,12,'#0284c7'],[4,3,8,10,'#38bdf8'],[3,2,2,12,'#0369a1'],
+        [6,5,5,2,'#fde047'],[6,8,4,1,'#e0f2fe']
+      ],
+      '👁️': [
+        [2,6,12,4,'#e2e8f0'],[4,4,8,2,'#e2e8f0'],[4,10,8,2,'#e2e8f0'],
+        [6,5,4,6,'#0284c7'],[7,6,2,4,'#020617'],[8,6,1,1,'#ffffff']
+      ],
+      '🌐': [
+        [4,2,8,12,'#0284c7'],[2,4,12,8,'#0284c7'],[5,3,4,3,'#34d399'],
+        [8,6,4,4,'#34d399'],[4,8,3,4,'#34d399'],[3,7,10,1,'#7dd3fc']
+      ],
+      '📋': [
+        [3,3,10,12,'#b45309'],[4,4,8,10,'#f8fafc'],[6,1,4,3,'#94a3b8'],
+        [5,6,6,1,'#475569'],[5,8,6,1,'#475569'],[5,10,4,1,'#475569']
+      ],
+      '👆': [
+        [7,1,2,7,'#eab676'],[5,6,8,6,'#eab676'],[4,8,2,3,'#d99b52'],
+        [5,12,7,3,'#38bdf8']
+      ],
+      '🎉': [
+        [2,9,5,5,'#f59e0b'],[3,10,3,3,'#d97706'],[7,4,2,2,'#ef4444'],
+        [11,2,2,2,'#38bdf8'],[12,7,2,2,'#34d399'],[8,8,2,2,'#fde047']
+      ],
+      '➡️': [
+        [2,6,8,4,'#0f172a'],[9,3,2,10,'#0f172a'],[11,5,2,6,'#0f172a'],[13,7,2,2,'#0f172a']
+      ],
+      '📊': [
+        [2,13,12,2,'#94a3b8'],[3,8,2,5,'#38bdf8'],[7,4,2,9,'#34d399'],[11,6,2,7,'#fbbf24']
+      ],
+      '🔄': [
+        [4,3,8,2,'#0f172a'],[11,3,2,5,'#0f172a'],[3,5,2,4,'#0f172a'],
+        [4,11,8,2,'#0f172a'],[3,8,2,5,'#0f172a']
+      ],
+      '☕': [
+        [5,2,1,2,'#cbd5e1'],[8,1,1,3,'#cbd5e1'],[3,5,8,7,'#f8fafc'],
+        [11,6,2,4,'#f8fafc'],[2,12,11,2,'#94a3b8'],[4,6,6,2,'#78350f']
+      ],
+      '🎧': [
+        // 금발 머리 + 밝은 복숭아 피부톤(#fbcfe8 / #fde68a) 청년
+        [4,2,8,2,'#38bdf8'],[2,4,2,6,'#0284c7'],[12,4,2,6,'#0284c7'],
+        [4,4,8,2,'#facc15'],[4,6,8,6,'#fed7aa'],[5,8,2,2,'#020617'],
+        [9,8,2,2,'#020617'],[6,10,4,1,'#b45309'],[4,12,8,3,'#334155']
+      ],
+      '🧳': [
+        [6,2,4,3,'#94a3b8'],[3,5,10,9,'#f59e0b'],[4,6,8,7,'#d97706'],
+        [6,5,1,9,'#78350f'],[9,5,1,9,'#78350f'],[4,14,2,1,'#020617'],[10,14,2,1,'#020617']
+      ],
+      '🚨': [
+        [5,3,6,8,'#ef4444'],[6,4,2,5,'#fecaca'],[3,11,10,3,'#64748b'],
+        [1,5,2,2,'#fde047'],[13,5,2,2,'#fde047'],[7,1,2,1,'#fde047']
+      ],
+      '👶': [
+        [4,4,8,4,'#f472b6'],[4,8,8,4,'#ec4899'],[9,5,3,3,'#fde68a'],
+        [2,3,2,5,'#94a3b8'],[4,12,2,2,'#e2e8f0'],[10,12,2,2,'#e2e8f0']
+      ],
+      '🚧': [
+        [2,4,12,4,'#facc15'],[4,4,2,4,'#020617'],[8,4,2,4,'#020617'],
+        [12,4,2,4,'#020617'],[4,8,2,6,'#64748b'],[10,8,2,6,'#64748b']
+      ],
+      '🗺️': [
+        [2,3,4,10,'#fde68a'],[6,4,4,10,'#fcd34d'],[10,3,4,10,'#fde68a'],
+        [3,6,8,2,'#10b981'],[5,8,7,2,'#3b82f6'],[9,5,2,2,'#ef4444']
+      ],
+      '👓': [
+        // 짙은 갈색 피부톤(#8d5524) + 안경 착용 시민
+        [4,2,8,3,'#1e293b'],[4,5,8,7,'#8d5524'],[4,7,3,2,'#38bdf8'],
+        [9,7,3,2,'#38bdf8'],[7,7,2,1,'#e2e8f0'],[5,8,1,1,'#020617'],
+        [10,8,1,1,'#020617'],[6,10,4,1,'#451a03'],[4,12,8,3,'#0284c7']
+      ],
+      '🩼': [
+        [3,2,4,2,'#fbbf24'],[4,4,2,10,'#94a3b8'],[9,2,4,2,'#fbbf24'],
+        [10,4,2,10,'#94a3b8'],[4,14,2,1,'#ef4444'],[10,14,2,1,'#ef4444']
+      ],
+      '🚗': [
+        [4,4,8,4,'#ef4444'],[5,5,6,3,'#38bdf8'],[2,8,12,4,'#dc2626'],
+        [2,9,2,2,'#fde047'],[4,12,3,2,'#020617'],[9,12,3,2,'#020617']
+      ],
+      '🚦': [
+        [5,1,6,14,'#334155'],[7,2,2,3,'#ef4444'],[7,6,2,3,'#facc15'],[7,10,2,3,'#10b981']
+      ],
+      '🛡️': [
+        [3,2,10,7,'#10b981'],[4,9,8,3,'#059669'],[6,12,4,2,'#047857'],
+        [7,4,2,6,'#ffffff'],[5,6,6,2,'#ffffff']
+      ],
+      '🏛️': [
+        [2,4,12,2,'#cbd5e1'],[5,2,6,2,'#94a3b8'],[3,6,2,7,'#e2e8f0'],
+        [7,6,2,7,'#e2e8f0'],[11,6,2,7,'#e2e8f0'],[1,13,14,2,'#64748b']
+      ],
+      '🗑️': [
+        [4,2,8,2,'#94a3b8'],[6,1,4,1,'#cbd5e1'],[4,4,8,10,'#64748b'],
+        [6,6,1,6,'#334155'],[9,6,1,6,'#334155']
+      ],
+      '📦': [
+        [2,3,12,10,'#d97706'],[3,4,10,8,'#f59e0b'],[7,3,2,10,'#fef3c7'],[2,7,12,2,'#b45309']
+      ],
+      '😊': [
+        [4,2,8,1,'#10b981'],[2,3,12,10,'#10b981'],[4,13,8,1,'#10b981'],
+        [5,6,2,2,'#020617'],[9,6,2,2,'#020617'],[4,9,2,1,'#020617'],
+        [10,9,2,1,'#020617'],[6,10,4,1,'#020617']
+      ],
+      '😣': [
+        [4,2,8,1,'#fb7185'],[2,3,12,10,'#fb7185'],[4,13,8,1,'#fb7185'],
+        [4,5,3,2,'#020617'],[9,5,3,2,'#020617'],[5,10,6,1,'#020617'],
+        [4,11,2,1,'#020617'],[10,11,2,1,'#020617']
+      ],
+      '🤔': [
+        [4,2,8,1,'#fbbf24'],[2,3,12,10,'#fbbf24'],[4,13,8,1,'#fbbf24'],
+        [5,6,2,2,'#020617'],[9,5,2,2,'#020617'],[6,10,4,1,'#020617']
+      ],
+      '❌': [
+        [3,3,2,2,'#ef4444'],[5,5,2,2,'#ef4444'],[7,7,2,2,'#ef4444'],
+        [9,9,2,2,'#ef4444'],[11,11,2,2,'#ef4444'],[11,3,2,2,'#ef4444'],
+        [9,5,2,2,'#ef4444'],[5,9,2,2,'#ef4444'],[3,11,2,2,'#ef4444']
+      ],
+      '✔': [
+        [12,3,2,2,'#34d399'],[10,5,2,2,'#34d399'],[8,7,2,2,'#34d399'],
+        [6,9,2,2,'#34d399'],[4,7,2,2,'#34d399'],[2,5,2,2,'#34d399']
+      ],
+      '🚇': [
+        [3,2,10,11,'#38bdf8'],[4,3,8,5,'#020617'],[5,9,2,2,'#fde047'],
+        [9,9,2,2,'#fde047'],[2,13,12,2,'#64748b']
+      ],
+      '🌟': [
+        [7,1,2,3,'#fde047'],[5,4,6,6,'#facc15'],[1,6,14,2,'#fde047'],
+        [4,10,3,3,'#eab308'],[9,10,3,3,'#eab308'],[7,5,2,2,'#ffffff']
+      ],
+      '🎖️': [
+        [5,1,6,5,'#3b82f6'],[6,1,4,5,'#ef4444'],[4,6,8,7,'#fbbf24'],
+        [6,8,4,3,'#fde047']
+      ],
+      '🕶️': [
+        [2,5,12,2,'#020617'],[3,7,4,4,'#020617'],[9,7,4,4,'#020617'],
+        [4,7,2,1,'#38bdf8'],[10,7,2,1,'#38bdf8']
+      ],
+      '🏢': [
+        [3,2,10,13,'#64748b'],[5,4,2,2,'#fde047'],[9,4,2,2,'#fde047'],
+        [5,8,2,2,'#38bdf8'],[9,8,2,2,'#fde047'],[6,12,4,3,'#0f172a']
+      ],
+      // ── 화면 문구 속 이모지를 위한 보충 스프라이트 ──
+      '🔧': [[9,1,5,5,'#94a3b8'],[11,2,2,2,'#0f172a'],[7,5,4,3,'#cbd5e1'],[5,7,3,3,'#cbd5e1'],[2,10,4,4,'#64748b']],
+      '🧐': [[3,2,10,12,'#fbbf24'],[2,3,12,10,'#fbbf24'],[4,6,2,2,'#0f172a'],[9,5,4,4,'#e2e8f0'],[10,6,2,2,'#0f172a'],[12,9,1,4,'#94a3b8'],[5,11,5,1,'#0f172a']],
+      '📐': [[2,2,2,12,'#fbbf24'],[4,6,2,8,'#fbbf24'],[6,8,2,6,'#fbbf24'],[8,10,2,4,'#fbbf24'],[10,12,4,2,'#fbbf24'],[3,8,1,1,'#0f172a'],[3,11,1,1,'#0f172a']],
+      '📏': [[1,6,14,4,'#fbbf24'],[3,6,1,2,'#0f172a'],[6,6,1,2,'#0f172a'],[9,6,1,2,'#0f172a'],[12,6,1,2,'#0f172a']],
+      '💳': [[1,3,14,10,'#2563eb'],[1,5,14,2,'#0f172a'],[3,9,3,2,'#fbbf24'],[8,9,5,1,'#bfdbfe']],
+      '⚠️': [[7,1,2,2,'#fbbf24'],[5,3,6,3,'#fbbf24'],[3,6,10,4,'#fbbf24'],[1,10,14,4,'#fbbf24'],[7,5,2,5,'#0f172a'],[7,11,2,2,'#0f172a']],
+      '❓': [[4,2,8,2,'#f43f5e'],[10,4,2,3,'#f43f5e'],[7,7,4,2,'#f43f5e'],[7,9,2,2,'#f43f5e'],[7,12,2,2,'#f43f5e']],
+      '⚡': [[8,1,4,2,'#facc15'],[6,3,4,2,'#facc15'],[4,5,8,2,'#facc15'],[7,7,4,2,'#facc15'],[6,9,3,2,'#facc15'],[5,11,2,2,'#facc15'],[4,13,2,2,'#facc15']],
+      '🎨': [[2,3,12,10,'#fde68a'],[4,5,2,2,'#ef4444'],[8,4,2,2,'#22c55e'],[10,7,2,2,'#3b82f6'],[5,9,2,2,'#0f172a']],
+      '☀️': [[4,4,8,8,'#facc15'],[7,1,2,2,'#fde047'],[7,13,2,2,'#fde047'],[1,7,2,2,'#fde047'],[13,7,2,2,'#fde047']],
+      '🌑': [[3,2,10,12,'#334155'],[2,3,12,10,'#334155'],[5,4,6,8,'#475569']],
+      '🎓': [[1,4,14,3,'#1e293b'],[4,2,8,2,'#334155'],[4,7,8,4,'#0f172a'],[12,6,2,6,'#fbbf24']],
+      '✨': [[7,1,2,14,'#fde047'],[1,7,14,2,'#fde047'],[5,5,6,6,'#ffffff']]
+    };
+
+    function pixelIcon(iconKey, size = 20, extraClass = '') {
+      const rects = PIXEL_SPRITES[iconKey] || PIXEL_SPRITES['🔍'];
+      const svgRects = rects.map(([x, y, w, h, fill]) =>
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"/>`
+      ).join('');
+      return `<svg viewBox="0 0 16 16" style="width:${(Number(size) / 16).toFixed(3)}em;height:${(Number(size) / 16).toFixed(3)}em;" class="pixel-art-svg ${extraClass}" aria-hidden="true">${svgRects}</svg>`;
+    }
+
+    function hydrateStaticPixelIcons() {
+      document.querySelectorAll('.px-icon').forEach(el => {
+        const key = el.getAttribute('data-icon');
+        const size = parseInt(el.getAttribute('data-size') || '18', 10);
+        el.innerHTML = pixelIcon(key, size);
+      });
+    }
+
+    // =========================================================================
+    // 다국어(KO / EN) UI 사전
+    // =========================================================================
+    const UI_TEXT = {
+      ko: {
+        headerTitle: "보이지 않는 장벽의 미궁",
+        scoreLabel: "감별 점수",
+        contrastOff: "고대비 OFF",
+        contrastOn: "고대비 ON",
+        guideBtnLabel: "UD수첩",
+        soundOn: "효과음 ON",
+        soundOff: "효과음 OFF",
+        fontLabels: ["가", "가+", "가++"],
+        introBannerSub: "도서관 · 카페 · 지하상가 · 지하철 · 광장 · 시청까지 7개의 미궁",
+        introRoleBadge: "신임 도시 공간 감별사 임명장",
+        introHeading: "“누군가에게는 평범한 일상이,<br/>누군가에게는 <span class='text-amber-400 underline decoration-2 underline-offset-4'>보이지 않는 미궁</span>입니다.”",
+        introDesc: "당신은 시민들의 불편 민원이 접수된 <strong>7곳의 일상 공간</strong>에 파견되었습니다. 도서관 입구부터 무인 카페, 지하 쇼핑몰, 지하철 개찰구와 환승역, 광장 횡단보도, 그리고 시청 본관까지—사람들을 가로막는 <strong>진짜 원인(Bad Design)</strong>을 찾아 모두를 위한 <strong>유니버설디자인(Universal Design) 7대 원칙</strong>으로 해결해 주세요!",
+        introHowToTitle: "플레이 방법 (전 연령·키보드·다국어 지원)",
+        introHowToItems: [
+          "화면 속 <strong>사람들과 시설물 단서 버튼</strong>을 클릭(또는 Tab·Enter 키)해 현장을 조사하세요.",
+          "각 스테이지의 <strong>[체험 스위치]</strong>를 눌러 시야 높이, 색약 시야, 개찰구 폭, 보행섬 유무를 직접 비교해 보세요.",
+          "아래 <strong>보기 버튼</strong>을 눌러 입력창에 넣거나 직접 정답을 입력한 뒤 <strong>[판정]</strong> 버튼을 누르면 다음 공간이 열립니다!"
+        ],
+        introStartBtn: "현장 조사 시작하기 (STAGE 1)",
+        introGuideBtn: "UD 7대 원칙 먼저 보기",
+        clueHeaderLabel: "현장 단서 클릭 조사 (인물이나 장치를 클릭 또는 Tab으로 선택하세요)",
+        defaultClueSpeaker: "현장 조사 로그",
+        defaultClueText: "위 화면에서 어려움을 겪고 있는 시민이나 문제의 시설물을 눌러 단서를 확인하세요.",
+        problemBoxLabel: "현장 민원 브리핑",
+        statusCleared: "해결 완료",
+        statusUnsolved: "미해결 장벽",
+        personaHeaderLabel: "이 공간에서 배제된 시민들:",
+        answerPlaceholder: "정답 입력 또는 아래 보기 선택",
+        submitBtn: "판정",
+        choiceChipDesc: "보기 (누르면 입력창에 들어가며, [판정] 버튼을 눌러 제출하세요):",
+        hintBtnShow: "힌트 보기 (-5점)",
+        hintBtnOpen: "힌트 열림",
+        acceptedKeywordsHint: "단답형·문장형 모두 인식됩니다",
+        clearBadgeText: "장벽 해결 완료!",
+        nextStageBtnText: "다음 현장으로 이동하기",
+        finalStageBtnText: "최종 수료증 및 리포트 확인하기",
+        prevStageBtn: "◀ 이전 스테이지",
+        skipStageBtn: "다음 스테이지 ▶",
+        progressText: (c) => `해결한 공간: ${c} / 7`,
+        emptyInputAlert: "정답을 입력하거나 아래의 [보기] 버튼을 눌러 입력창에 채운 뒤 [판정]을 눌러 주세요!",
+        wrongFeedbackPrefix: "아직 장벽이 해결되지 않았습니다: ",
+        wrongFeedbackSuffix: " — 현장 단서를 클릭해 조사하거나 [힌트 보기]를 눌러 보세요! (-2점)",
+        endingTitle: "도시 공간 감별사 수료증",
+        endingSubtitle: "당신은 일상 속 7개의 보이지 않는 장벽을 모두 찾아내어<br class='hidden sm:inline'/>누구나 존중받는 <strong>유니버설디자인(UD) 7대 원칙 도시</strong>를 완성했습니다!",
+        endingScoreLabel: "최종 감별 점수",
+        endingRankLabel: "감별사 등급",
+        rank1: "모두의 도시 수석 디자이너",
+        rank2: "우수 공간 감별사",
+        rank3: "공감하는 시민 디자이너",
+        endingSummaryHeading: "내가 바꾼 7가지 일상 공간 리포트 (UD 7대 원칙 완결)",
+        endingTakeawayTitle: "유니버설디자인이 전하는 핵심 메시지",
+        endingTakeawayBody: "유니버설디자인은 특정 누군가만을 위한 ‘특별 배려’가 아닙니다. 둥근 문손잡이를 <strong>레버</strong>로 바꾸고, 키오스크에 <strong>낮은 화면</strong>을 넣고, 비상벨에 <strong>경광등</strong>을 달고, 지하철에 <strong>넓은 개찰구</strong>와 <strong>기호 안내선</strong>을 만들고, 넓은 횡단보도 중앙에 <strong>보행섬</strong>을 두고, 시청 정문에 <strong>경사 광장</strong>을 만드는 순간—어린이, 어르신, 여행객, 부상자, 장애인, 그리고 양손에 짐을 든 우리 모두가 안전하고 당당하게 일상을 누릴 수 있습니다.",
+        endingRestartBtn: "처음부터 다시 플레이하기",
+        endingGuideBtn: "유니버설디자인 7대 원칙 수첩 열기",
+        guideModalTitle: "유니버설디자인(UD) 7대 원칙 수첩",
+        guideModalCloseTop: "닫기 ✕",
+        guideModalDesc: "로널드 메이스(Ronald Mace)와 노스캐롤라이나 주립대 연구진이 정립한 <strong>유니버설디자인 7대 원칙</strong>입니다. 연령, 성별, 국적, 장애 유무에 관계없이 누구나 처음부터 공평하고 편리하게 사용할 수 있는 환경의 기준입니다.",
+        guideModalCloseBottom: "확인 완료",
+        footerNotice: "유니버설디자인 인식 개선 교육용 인터랙티브 미궁게임 · 키보드(Tab/Enter) 및 글자 크기·고대비·한영 전환 지원",
+        principles: [
+          { num: "제1원칙", title: "공평한 사용 (Equitable Use) — Stage 7", desc: "누구에게나 동등한 접근을 제공하고, 특정 사용자를 분리하거나 낙인찍지 않는 디자인 (예: 계단 없는 통합 경사 광장 정문)" },
+          { num: "제2원칙", title: "사용상의 유연성 (Flexibility in Use) — Stage 2", desc: "오른손·왼손잡이, 눈높이 차이, 조작 속도의 다양성을 수용하는 디자인 (예: 키오스크 낮은 화면 모드)" },
+          { num: "제3원칙", title: "간단하고 직관적인 사용 (Simple and Intuitive Use) — Stage 5", desc: "언어나 사전 지식, 색각 특성에 상관없이 한눈에 이해할 수 있는 디자인 (예: 색상+기호·숫자·픽토그램 병기)" },
+          { num: "제4원칙", title: "쉽게 인지할 수 있는 정보 (Perceptible Information) — Stage 3", desc: "시각·청각·촉각 등 두 가지 이상의 감각 채널로 핵심 정보를 전달하는 디자인 (예: 소리 사이렌 + 시각 경광등)" },
+          { num: "제5원칙", title: "오류에 대한 포용력 (Tolerance for Error) — Stage 6", desc: "걸음이 느리거나 실수를 하더라도 큰 위험이나 사고로 이어지지 않는 안전한 설계 (예: 광장 횡단보도 중앙 보행섬)" },
+          { num: "제6원칙", title: "적은 신체적 노력 (Low Physical Effort) — Stage 1", desc: "무리한 힘이나 손목 회전 없이 자연스러운 자세로 조작 가능한 디자인 (예: 팔꿈치로도 열리는 레버형 문손잡이)" },
+          { num: "제7원칙", title: "접근과 사용을 위한 충분한 공간 (Size and Space) — Stage 4", desc: "체형, 자세, 이동 보조기구(휠체어·유모차·짐) 유무에 관계없이 넉넉한 접근·조작 공간을 확보하는 디자인 (예: 지하철 넓은 통로 개찰구)" }
+        ]
+      },
+      en: {
+        headerTitle: "Labyrinth of Invisible Barriers",
+        scoreLabel: "UD Score",
+        contrastOff: "Contrast OFF",
+        contrastOn: "Contrast ON",
+        guideBtnLabel: "UD Guide",
+        soundOn: "SFX ON",
+        soundOff: "SFX OFF",
+        fontLabels: ["A", "A+", "A++"],
+        introBannerSub: "7 Labyrinths: Library · Cafe · Mall · Subway · Crosswalk · City Hall",
+        introRoleBadge: "Official Appointment: Urban Space Inspector",
+        introHeading: "“What feels like an ordinary day to some<br/>is an <span class='text-amber-400 underline decoration-2 underline-offset-4'>invisible labyrinth</span> to others.”",
+        introDesc: "You have been dispatched to <strong>7 everyday public spaces</strong> where accessibility complaints were filed. From the library entrance, self-order cafe, and underground mall to the subway turnstile, transfer station, wide crosswalk, and City Hall—uncover the <strong>Bad Designs</strong> and transform them with the <strong>7 Principles of Universal Design</strong>!",
+        introHowToTitle: "How to Play (Keyboard, High-Contrast & Bilingual)",
+        introHowToItems: [
+          "Click (or press Tab + Enter) on <strong>citizens and facility clues</strong> inside the scene to investigate.",
+          "Use the <strong>[Simulation Switch]</strong> in each stage to experience eye-level height, color vision deficiency, gate width, and refuge islands.",
+          "Click a <strong>Choice Button</strong> below to fill the input box (or type your own answer), then press <strong>[Check]</strong> to unlock the next stage!"
+        ],
+        introStartBtn: "Start Investigation (STAGE 1)",
+        introGuideBtn: "View 7 UD Principles First",
+        clueHeaderLabel: "Click Clues to Investigate (Click or use Tab/Enter on characters & objects)",
+        defaultClueSpeaker: "Field Investigation Log",
+        defaultClueText: "Select any citizen or facility in the scene above to inspect the cause of the barrier.",
+        problemBoxLabel: "Field Complaint Briefing",
+        statusCleared: "Resolved",
+        statusUnsolved: "Unsolved Barrier",
+        personaHeaderLabel: "Citizens excluded in this space:",
+        answerPlaceholder: "Type answer or click a choice below",
+        submitBtn: "Check",
+        choiceChipDesc: "Choices (Click to fill the input box, then press [Check] to submit):",
+        hintBtnShow: "Show Hint (-5 pts)",
+        hintBtnOpen: "Hint Opened",
+        acceptedKeywordsHint: "Both short keywords & full sentences work",
+        clearBadgeText: "Barrier Resolved!",
+        nextStageBtnText: "Move to Next Site",
+        finalStageBtnText: "View Certificate & Report",
+        prevStageBtn: "◀ Prev Stage",
+        skipStageBtn: "Next Stage ▶",
+        progressText: (c) => `Resolved: ${c} / 7`,
+        emptyInputAlert: "Please type an answer or click one of the [Choices] below before pressing [Check]!",
+        wrongFeedbackPrefix: "Barrier not yet resolved: ",
+        wrongFeedbackSuffix: " — Click scene clues to investigate or press [Show Hint]! (-2 pts)",
+        endingTitle: "Urban UD Inspector Certificate",
+        endingSubtitle: "You uncovered all 7 invisible barriers in everyday life and built a<br class='hidden sm:inline'/><strong>Universal Design City (All 7 Principles)</strong> where everyone belongs!",
+        endingScoreLabel: "Final UD Score",
+        endingRankLabel: "Inspector Rank",
+        rank1: "Chief Universal Designer",
+        rank2: "Senior Space Inspector",
+        rank3: "Empathetic Citizen Designer",
+        endingSummaryHeading: "7 Everyday Spaces Transformed (All 7 UD Principles)",
+        endingTakeawayTitle: "Core Message of Universal Design",
+        endingTakeawayBody: "Universal Design is not a 'special favor' for a few. Replacing a round doorknob with a <strong>lever</strong>, adding a <strong>low screen mode</strong> to kiosks, pairing sirens with a <strong>strobe light</strong>, installing <strong>wide accessible gates</strong> and <strong>symbol guide lines</strong> in subways, placing a <strong>pedestrian refuge island</strong> on wide crosswalks, and building an <strong>inclusive sloped plaza</strong> at City Hall empowers children, seniors, travelers, injured citizens, people with disabilities, and everyone carrying heavy bags.",
+        endingRestartBtn: "Play Again from Start",
+        endingGuideBtn: "Open 7 UD Principles Guide",
+        guideModalTitle: "Universal Design (UD) 7 Principles Guide",
+        guideModalCloseTop: "Close ✕",
+        guideModalDesc: "Established by Ronald Mace and researchers at NC State University, the <strong>7 Principles of Universal Design</strong> define environments usable by all people, to the greatest extent possible, without the need for adaptation.",
+        guideModalCloseBottom: "Got It",
+        footerNotice: "Interactive Educational Game for Universal Design Awareness · Keyboard, High-Contrast & KO/EN Support",
+        principles: [
+          { num: "Principle 1", title: "Equitable Use — Stage 7", desc: "Provides the same means of use for all users without segregating or stigmatizing anyone (e.g., step-free sloped plaza main entrance)." },
+          { num: "Principle 2", title: "Flexibility in Use — Stage 2", desc: "Accommodates a wide range of individual preferences, heights, and abilities (e.g., Low Screen Mode on kiosks)." },
+          { num: "Principle 3", title: "Simple and Intuitive Use — Stage 5", desc: "Easy to understand regardless of user experience, language skills, or color vision (e.g., pairing colors with shapes, numbers, and pictograms)." },
+          { num: "Principle 4", title: "Perceptible Information — Stage 3", desc: "Uses two or more sensory modes—visual, audible, tactile—for vital information (e.g., audio siren + flashing strobe light)." },
+          { num: "Principle 5", title: "Tolerance for Error — Stage 6", desc: "Minimizes hazards and adverse consequences of accidental or slower actions (e.g., central pedestrian refuge island on wide crosswalks)." },
+          { num: "Principle 6", title: "Low Physical Effort — Stage 1", desc: "Can be used efficiently and comfortably with minimum fatigue or wrist twisting (e.g., lever handle operable with an elbow)." },
+          { num: "Principle 7", title: "Size and Space for Approach and Use — Stage 4", desc: "Appropriate size and space is provided regardless of body size, posture, or mobility aids (e.g., wide barrier-free subway gates)." }
+        ]
+      }
+    };
+
+    // =========================================================================
+    // 단서 사전 (스테이지 1~7)
+    // =========================================================================
+    const CLUE_DICT = {
+      s1_student: {
+        icon: '📚',
+        ko: ['양손에 전공서적을 든 대학생', '“책을 7권이나 안고 있어서 손가락으로 둥근 손잡이를 쥐고 비틀 수가 없어요. 팔꿈치로 툭 누르기만 해도 열리는 손잡이였으면 좋겠어요!”'],
+        en: ['University Student Carrying Heavy Books', '“My arms are full of textbooks, so I cannot grip and twist a round knob. I wish I could just press it down with my elbow!”']
+      },
+      s1_senior: {
+        icon: '👵',
+        ko: ['손목 관절염이 있는 어르신', '“나이가 드니 손아귀 힘(악력)도 약해지고 손목을 비틀 때마다 시큰거려서 이런 동그란 손잡이는 돌리기가 참 힘들구먼...”'],
+        en: ['Senior Citizen with Wrist Arthritis', '“With arthritis, my grip is weak and twisting my wrist hurts sharply. Turning a round knob like this is really painful...”']
+      },
+      s1_child: {
+        icon: '🧒',
+        ko: ['비에 젖어 손이 미끄러운 아이', '“우산을 접느라 손에 물이 묻었더니 동그란 금속 손잡이가 자꾸 헛돌아요! 손이 작아서 한 손으로 감싸 쥐기도 힘들어요.”'],
+        en: ['Child with Wet, Slippery Hands', '“My hands got wet from folding my umbrella, and the round brass knob keeps slipping! It is too big for my small hand to grip.”']
+      },
+      s1_door_bad: {
+        icon: '🚪',
+        ko: ['황동 둥근 문손잡이 (Door Knob)', '매끄러운 구형 금속 손잡이입니다. 문을 열려면 ① 강하게 움켜쥐는 힘(파지력)과 ② 손목을 회전시키는 힘이 동시에 필요합니다.'],
+        en: ['Round Brass Door Knob', 'A smooth spherical metal knob. Opening it requires both (1) strong gripping force and (2) wrist rotation at the same time.']
+      },
+      s1_door_good: {
+        icon: '🚪',
+        ko: ['레버형 문손잡이 (Lever Handle)', '손가락으로 쥐고 비틀 필요 없이 손바닥이나 팔꿈치로 가볍게 아래로 누르기만 해도 열리는 유니버설디자인 손잡이입니다!'],
+        en: ['Lever Door Handle', 'A Universal Design handle that opens simply by pressing down with a palm or elbow—no gripping or wrist twisting needed!']
+      },
+
+      s2_worker: {
+        icon: '♿',
+        ko: ['휠체어 이용 직장인 (앉은 눈높이 약 110cm)', '“키오스크 화면 상단에 있는 [커피 메뉴]와 [결제] 버튼은 팔이 전혀 닿지 않아요. 게다가 아래에서 올려다보니 액정 시야각 때문에 화면이 까맣게 보입니다.”'],
+        en: ['Wheelchair User (Seated eye level ~110cm)', '“I cannot reach the [Coffee Menu] or [Pay] buttons at the top of the kiosk. Plus, looking up from below makes the LCD screen look dark due to viewing angle limits.”']
+      },
+      s2_kid: {
+        icon: '🧒',
+        ko: ['초등학생 어린이 (키 122cm)', '“까치발을 들어도 맨 위에 있는 핫초코 메뉴를 누를 수가 없어요. 키오스크가 어른들 서 있는 키에만 맞춰져 있나 봐요.”'],
+        en: ['Elementary School Child (Height 122cm)', '“Even on tiptoes, I cannot touch the Hot Cocoa button at the very top. This kiosk was only made for tall standing adults.”']
+      },
+      s2_topmenu: {
+        icon: '☕',
+        ko: ['키오스크 상단 메뉴 영역 (높이 165cm)', '서 있는 성인의 눈높이(160~170cm)만을 기준으로 설계된 메뉴바입니다. 휠체어 이용자나 어린이, 저신장자에게는 물리적·시각적 장벽이 됩니다.'],
+        en: ['Top Kiosk Menu Bar (Height 165cm)', 'Designed solely for standing adults (160–170cm). It creates a physical and visual barrier for wheelchair users, children, and people of short stature.']
+      },
+      s2_lowbtn: {
+        icon: '👇',
+        ko: ['화면 우측 하단의 작은 버튼 발견!', '구석에 아주 작은 글씨로 [낮은 화면] (낮은 자세 모드) 아이콘이 숨겨져 있습니다! 이 기능을 켜면 전체 조작 화면이 손이 닿는 아래쪽으로 내려옵니다.'],
+        en: ['Tiny Button Found at Bottom-Right!', 'A button labeled [Low Screen Mode] is tucked in the corner! Activating it brings the entire menu interface down within comfortable reach.']
+      },
+
+      s3_youth: {
+        icon: '🎧',
+        ko: ['노이즈캔슬링 이어폰을 낀 청년', '“(음악을 크게 듣느라 주변 소리를 전혀 듣지 못하고 스마트폰 화면만 바라보고 있다. 눈앞에서 번쩍이는 시각적 신호가 있다면 바로 고개를 들 텐데!)”'],
+        en: ['Youth Wearing Noise-Canceling Earphones', '“(Listening to loud music and looking at a phone, completely unaware of the audio siren. A bright flashing light would immediately catch their eye!)”']
+      },
+      s3_traveler: {
+        icon: '🧳',
+        ko: ['청각장애인 여행객', '“사람들이 갑자기 뛰어가는 걸 보고서야 무슨 일이 난 줄 알았어요. 비상벨이 소리만 울리고 빛이 나지 않으니 위급 상황인지 전혀 알 수 없었습니다.”'],
+        en: ['Deaf Traveler', '“I only realized something was wrong when people started running. Since the alarm only makes sound without a flashing light, I had no way of knowing.”']
+      },
+      s3_alarm_bad: {
+        icon: '🚨',
+        ko: ['소리 전용 화재경보기와 빈 브래킷 [ ? ]', '100dB의 사이렌 소리(청각 단일 채널)만 출력되고 있습니다. 소음 환경의 시민, 난청 노인, 청각장애인 모두에게 즉시 위험을 알리려면 [ ? ] 자리에 강렬한 빛을 내는 장치가 필요합니다!'],
+        en: ['Audio-Only Fire Alarm & Empty Bracket [ ? ]', 'It only emits a 100dB siren (single audio channel). To alert people in noisy areas, seniors with hearing loss, and deaf citizens, the [ ? ] bracket needs a bright flashing visual device!']
+      },
+      s3_alarm_good: {
+        icon: '🚨',
+        ko: ['시각경보기(경광등 / Strobe Light) 작동 중!', '소리 사이렌과 함께 붉은색과 백색 고휘도 LED 경광등이 동시에 점멸하여 누구나 즉시 위급 상황을 인지하고 대피할 수 있습니다!'],
+        en: ['Visual Alarm (Strobe Light) Activated!', 'High-intensity flashing strobe lights now operate alongside the audio siren so everyone can perceive the emergency immediately!']
+      },
+
+      s4_wheelchair: {
+        icon: '♿',
+        ko: ['전동휠체어 이용 시민', '“일반 휠체어 폭이 약 65~70cm인데, 이 삼발이 개찰구 통로는 폭이 45cm밖에 안 돼요. 게다가 쇠막대를 밀고 지나갈 수도 없어서 아예 들어갈 수가 없습니다!”'],
+        en: ['Power Wheelchair User', '“A standard wheelchair is about 65–70cm wide, but this tripod turnstile passage is only 45cm wide with metal bars blocking the way!”']
+      },
+      s4_stroller: {
+        icon: '👶',
+        ko: ['유모차를 미는 보호자', '“아이와 함께 지하철을 타려는데 삼발이 회전 막대에 유모차 바퀴가 걸려 오도 가도 못하고 있어요. 바퀴나 짐이 걸리지 않는 넓은 자동 개찰구가 필요해요!”'],
+        en: ['Parent Pushing a Stroller', '“Our stroller wheels are stuck against the tripod turnstile bars. We need a wide automatic gate without rotating bars!”']
+      },
+      s4_luggage: {
+        icon: '🧳',
+        ko: ['대형 캐리어를 든 여행객', '“양손에 큰 여행 가방을 끌고 좁은 삼발이 개찰구를 통과하려다 가방이 끼어버렸어요. 짐을 든 사람에게도 통로가 너무 좁습니다.”'],
+        en: ['Traveler with Large Suitcase', '“My large suitcase got jammed right between the narrow turnstile bars. 45cm is way too narrow for travelers with luggage too.”']
+      },
+      s4_gate_bad: {
+        icon: '🚧',
+        ko: ['45cm 삼발이 회전 개찰구 (Tripod Turnstile)', '유효 폭이 45cm에 불과하고 회전 금속 막대가 돌출되어 있어 휠체어, 유모차, 목발 이용자, 큰 짐을 든 승객을 물리적으로 가로막습니다.'],
+        en: ['45cm Tripod Turnstile', 'With only 45cm of clearance and protruding metal bars, it physically blocks wheelchairs, strollers, crutches, and large luggage.']
+      },
+      s4_gate_good: {
+        icon: '🚇',
+        ko: ['90cm 광폭 자동 개찰구 (넓은 통로 / Wide Gate)', '유효 폭 90cm 이상의 플랩도어형 넓은 통로로 교체되어 휠체어, 유모차, 여행용 캐리어, 일반 승객 모두가 한 줄로 막힘없이 통과합니다!'],
+        en: ['90cm Wide Accessible Gate', 'Replaced with a 90cm+ automatic flap-door wide passage so wheelchairs, strollers, suitcases, and all passengers pass smoothly!']
+      },
+
+      s5_sign: {
+        icon: '🗺️',
+        ko: ['색상 의존 안내 표지판', '표지판에 [초록색 선 = 2호선 / 빨간색 선 = 신분당선 / 파란색 선 = 4호선]이라고만 적혀 있습니다. 선 자체에 노선 번호나 기호가 없으면 색을 구분하기 어려운 사람에게는 무용지물입니다.'],
+        en: ['Color-Dependent Direction Sign', 'The sign only says [Green = Line 2 / Red = Shinbundang Line / Blue = Line 4]. Without numbers or shape symbols on the lines, color-blind travelers cannot tell Green and Red apart.']
+      },
+      s5_line_a_bad: {
+        icon: '➖',
+        ko: ['유도선 A (원래 초록색 2호선) — 끝부분이 빈칸 [ ? ]', '적녹색약 시야에서는 아래쪽 유도선 B(빨간색 신분당선)와 거의 같은 황갈색으로 보입니다! 빈칸 [ ? ]에 색깔이 없어도 알 수 있는 고유한 모양(기호·숫자)이 필요합니다.'],
+        en: ['Guide Line A (Originally Green Line 2) — Blank End [ ? ]', 'Under red-green color-blind vision, this looks almost identical in brownish-olive tone to Line B (Red)! The blank [ ? ] needs a distinct shape symbol and number.']
+      },
+      s5_line_b_bad: {
+        icon: '➖',
+        ko: ['유도선 B (원래 빨간색 신분당선) — 끝부분이 빈칸 [ ? ]', '적녹색약 시야에서는 위쪽 유도선 A(초록색 2호선)와 색깔이 겹쳐 구분할 수 없습니다! 색상 외에 마름모(◆) 같은 도형이나 노선 기호를 함께 표기해야 합니다.'],
+        en: ['Guide Line B (Originally Red Line) — Blank End [ ? ]', 'Under red-green color-blind vision, it blends right in with Line A (Green)! A distinct geometric symbol like a diamond (◆) or text code is needed alongside color.']
+      },
+      s5_line_c_bad: {
+        icon: '➖',
+        ko: ['유도선 C (파란색 4호선) — 끝부분이 빈칸 [ ? ]', '적녹색약에서 파란색은 구별되지만, 역 조명이 어두워지거나 전색맹·외국인 관광객일 때는 여전히 어떤 노선인지 한눈에 알기 어렵습니다.'],
+        en: ['Guide Line C (Blue Line 4) — Blank End [ ? ]', 'While blue remains distinguishable in red-green CVD, dim lighting or unfamiliarity still makes it unclear without a number or shape symbol.']
+      },
+      s5_line_a_good: {
+        icon: '✔',
+        ko: ['유도선 A — ● 동그라미 도형 + 숫자 [2호선] 병기 완료!', '색상뿐만 아니라 굵은 실선 패턴과 동그라미(●) 기호, 숫자 [2]가 함께 적혀 있어 누구나 즉시 2호선임을 알 수 있습니다.'],
+        en: ['Guide Line A — ● Circle Symbol + Number [Line 2] Added!', 'Marked with a solid pattern, circle symbol (●), and number [2] alongside color so everyone can identify Line 2 instantly.']
+      },
+      s5_line_b_good: {
+        icon: '✔',
+        ko: ['유도선 B — ◆ 마름모 도형 + [DX 신분당] 기호 병기 완료!', '점선 패턴과 마름모(◆) 도형, 영문·한글 기호가 함께 표기되어 초록색 선과 절대 헷갈리지 않습니다.'],
+        en: ['Guide Line B — ◆ Diamond Symbol + [DX] Code Added!', 'Marked with a dashed pattern, diamond shape (◆), and [DX] code so it is never confused with the green line.']
+      },
+      s5_line_c_good: {
+        icon: '✔',
+        ko: ['유도선 C — ■ 네모 도형 + 숫자 [4호선] 병기 완료!', '이중선 패턴과 네모(■) 도형, 숫자 [4]가 함께 표기되어 시각 특성과 언어에 관계없이 직관적으로 길을 찾습니다.'],
+        en: ['Guide Line C — ■ Square Symbol + Number [Line 4] Added!', 'Marked with a double-line pattern, square shape (■), and number [4] for intuitive wayfinding by all passengers.']
+      },
+      s5_citizens: {
+        icon: '👓',
+        ko: ['적녹색약 시민 & 외국인 관광객', '“적녹색약이 있으면 파란색은 구분돼도 초록색(2호선)과 빨간색(신분당선) 유도선이 거의 똑같은 황갈색으로 보여요! 선 위에 동그라미·마름모·네모 같은 도형 기호나 번호를 같이 적어주면 한눈에 알 수 있을 텐데요.”'],
+        en: ['Citizen with Red-Green CVD & Foreign Tourist', '“With red-green color blindness, blue stands out, but the green (Line 2) and red (Shinbundang) guide lines look almost the same brownish shade! Adding geometric symbols or numbers on the lines would solve this.”']
+      },
+
+      s6_senior: {
+        icon: '👵',
+        ko: ['도로 한가운데 멈춰 선 어르신', '“왕복 8차선 도로가 너무 넓어서 절반쯤 건넜는데 벌써 초록불이 깜빡거리다 빨간불로 바뀌어버렸어요! 도로 한가운데 잠시 멈춰 설 안전한 공간이 없으니 차들이 쌩쌩 지나가서 너무 무섭습니다.”'],
+        en: ['Senior Citizen Stranded Mid-Crosswalk', '“This 8-lane road is so wide that the light turned red when I was only halfway across! With no safe island in the middle to pause, cars are rushing right past me.”']
+      },
+      s6_crutch: {
+        icon: '🩼',
+        ko: ['발목 부상으로 목발을 짚은 청년', '“다리를 다쳐서 평소보다 걸음이 절반밖에 안 나와요. 한 번의 신호에 32m를 다 건너지 못해도 중간에 안전하게 대기하고 다음 신호에 건널 수 있는 공간이 꼭 필요합니다!”'],
+        en: ['Youth on Crutches with Ankle Injury', '“With my injured ankle, I walk at half speed. When I cannot cross all 32m in one signal cycle, I need a protected refuge space in the center to wait for the next green light!”']
+      },
+      s6_signal: {
+        icon: '🚦',
+        ko: ['짧은 보행 신호와 왕복 8차선(32m) 도로', '일반 보행 신호 시간은 보통 초당 1.0m(어린이·노인 보호구역은 0.7~0.8m) 보행 속도를 기준으로 설계됩니다. 걸음이 느린 보행자나 늦게 출발한 사람이 한 번에 다 건너지 못해도 사고로 이어지지 않는 물리적 안전지대가 필요합니다.'],
+        en: ['Short Signal & Wide 8-Lane (32m) Roadway', 'Pedestrian signal timing is typically calculated at 1.0m/s (0.7–0.8m/s in protection zones). Slower walkers or late starters need a physical refuge zone in the center so falling behind does not lead to an accident.']
+      },
+      s6_island_bad: {
+        icon: '🚗',
+        ko: ['위험한 도로 중앙선 [ ? ] (대기 공간 없음)', '양방향 차량이 시속 60km로 달리는 차선 사이입니다. 이곳에 연석과 안전 기둥(볼라드)으로 보호되는 중앙 대기 공간이 있다면 보행자가 안전하게 쉬어갈 수 있습니다!'],
+        en: ['Hazardous Center Line [ ? ] (No Waiting Space)', 'Cars speed past in both directions right next to the center line. Installing a raised, bollard-protected refuge island here would let pedestrians wait safely!']
+      },
+      s6_island_good: {
+        icon: '🛡️',
+        ko: ['보행섬 (중앙 보행 안전지대 / Pedestrian Refuge Island) 설치 완료!', '도로 중앙에 연석 없는 턱낮춤 통로와 방호울타리·볼라드로 보호되는 넓은 보행섬이 생겼습니다! 한 번에 다 건너지 못해도 안전하게 쉬었다가 다음 신호에 건널 수 있습니다.'],
+        en: ['Pedestrian Refuge Island Installed!', 'A wide, level-entry central refuge island protected by bollards is now in place! Anyone who cannot finish crossing in one cycle can safely wait for the next signal.']
+      },
+
+      s7_stairs: {
+        icon: '🏛️',
+        ko: ['시청 본관 웅장한 대리석 계단 (정문)', '비장애인 시민들은 밝고 넓은 정문 계단으로 당당하게 걸어 올라갑니다. 하지만 계단 옆에는 교통약자를 건물 뒷문으로 보내는 안내판만 서 있습니다.'],
+        en: ['Grand Marble Front Stairs of City Hall', 'Walking citizens enter proudly through the bright main stairs, while a signpost sends wheelchair and stroller users around to the back alley.']
+      },
+      s7_sign: {
+        icon: '📋',
+        ko: ['분리 안내 표지판', '“[휠체어 및 유모차는 건물 뒤편 화물용 승강기를 이용하세요]” — 물리적으로 건물 안에 들어갈 수는 있지만, 이용자를 정문에서 배제하고 분리시켜 심리적 소외감과 낙인(Stigma)을 주는 설계입니다.'],
+        en: ['Segregating Direction Sign', '“[Wheelchairs & Strollers: Use the freight elevator at the back of the building]” — While physically accessible, it segregates users from the main entrance and creates stigma.']
+      },
+      s7_alley: {
+        icon: '🗑️',
+        ko: ['어두운 건물 뒷문 화물용 승강기 통로', '휠체어 이용자: “민원을 보러 시청에 왔는데 왜 쓰레기통과 화물 상자가 쌓인 어두운 뒷문으로 몰래 들어가야 하나요? 모두가 같은 정문으로 당당하게 들어가는 것이 진정한 유니버설디자인 아닌가요?”'],
+        en: ['Dark Back-Alley Freight Elevator Path', 'Wheelchair User: “I came to City Hall as a citizen—why must I sneak in through a dark freight entrance past dumpsters? True Universal Design means everyone enters through the same main entrance together!”']
+      },
+      s7_plaza: {
+        icon: '🌟',
+        ko: ['모두를 위한 통합 경사 광장 (Integrated Sloped Plaza)', '계단을 없애고 정문 전체를 완만한 경사 광장으로 조성했습니다! 누구도 뒷문으로 돌아가지 않고 모두가 같은 길로 당당하게 입장합니다.'],
+        en: ['Integrated Sloped Plaza for All', 'By replacing stairs with a gentle, wide sloped plaza at the main entrance, nobody is sent to the back alley—everyone enters proudly together!']
+      }
+    };
+
+    function inspectClueById(clueId) {
+      const item = CLUE_DICT[clueId];
+      if (!item) return;
+      const [speaker, text] = item[currentLang] || item.ko;
+      inspectClue(item.icon, speaker, text);
+    }
+
+    // =========================================================================
+    // 공통 반대말 필터 (스테이지 무관 명백한 부정·반대 단어만 유지)
+    // =========================================================================
+    const GLOBAL_NEGATIONS = [
+      '불공평', '불평등', '불공정', '비공평', '차별적',
+      'unfair', 'inequitable', 'unequal'
+    ];
+
+    // =========================================================================
+    // 스테이지 데이터 (Stage 1 ~ Stage 7: UD 7대 원칙 전 과정)
+    // =========================================================================
+    const STAGES = [
+      {
+        id: 1,
+        badge: "STAGE 1 / 7",
+        principleId: 6,
+        ko: {
+          title: "닫힌 문 앞에서",
+          subtitle: "탐구 주제: 손아귀 힘이나 손목 회전 없이 여는 문",
+          principle: "UD 제6원칙: 적은 신체적 노력 (Low Physical Effort)",
+          problem: "새로 지어진 시립 도서관 입구입니다. 양손에 무거운 전공 서적을 가득 든 대학생, 손목 관절염이 있는 어르신, 비에 젖어 손이 미끄러운 아이가 문 앞에서 안으로 들어가지 못하고 있습니다. 도어락은 풀려 있습니다. 문짝을 통째로 바꾸지 않고 <strong>‘이 부품’</strong>만 교체해도 모두가 쉽게 열 수 있는데, 무엇일까요?",
+          personas: [
+            { icon: "📚", name: "양손에 책을 든 대학생" },
+            { icon: "👵", name: "손목 관절염 어르신" },
+            { icon: "🧒", name: "손이 미끄러운 어린이" }
+          ],
+          hint: "💡 힌트: 쥐고 비트는 동작(파지 및 회전)이 불가능한 상황을 생각해 보세요. 손가락 힘 대신 팔꿈치나 손바닥으로 가볍게 눌러서 열 수 있는 손잡이 형태를 <strong>‘ㄹㅂ형 손잡이’</strong> 또는 <strong>‘푸시바’</strong>라고 부릅니다.",
+          canonicalAnswer: "레버형 손잡이",
+          choices: ["레버형 손잡이", "자동문 설치", "회전문 설치", "도어클로저 강화"],
+          explanation: "둥근 문손잡이(Door knob)는 강한 악력과 손목 회전력이 동시에 필요해 많은 사람을 배제합니다. 반면 <strong>레버형 손잡이(Lever handle)</strong>나 푸시바로 교체하면 손에 짐이 있거나 손목이 아파도 팔꿈치나 체중만으로 가볍게 눌러 열 수 있습니다."
+        },
+        en: {
+          title: "Before the Closed Door",
+          subtitle: "Focus: Opening doors without grip strength or wrist twisting",
+          principle: "UD Principle 6: Low Physical Effort",
+          problem: "At the entrance of the new city library, a student carrying heavy textbooks in both arms, a senior citizen with wrist arthritis, and a child with wet, slippery hands are unable to open the door. The door is unlocked. Without replacing the entire door frame, swapping just <strong>this hardware part</strong> lets everyone open it effortlessly. What is it?",
+          personas: [
+            { icon: "📚", name: "Student with Full Arms" },
+            { icon: "👵", name: "Senior with Arthritis" },
+            { icon: "🧒", name: "Child with Wet Hands" }
+          ],
+          hint: "💡 Hint: Think about situations where gripping and twisting is impossible. A handle shaped so you can simply press it down with an elbow or palm starts with <strong>‘L____ Handle’</strong> (or Push Bar).",
+          canonicalAnswer: "Lever Handle",
+          choices: ["Lever Handle", "Automatic Door", "Revolving Door", "Heavy Door Closer"],
+          explanation: "Round doorknobs require both strong grip strength and wrist rotation, excluding many users. Replacing them with a <strong>Lever Handle</strong> or push bar allows anyone—even with full hands or sore wrists—to open the door using just an elbow or gentle downward pressure."
+        },
+        answers: [
+          "레버", "레버형", "레버형손잡이", "레버손잡이", "일자형손잡이", "일자손잡이",
+          "푸시바", "푸쉬바", "누르는손잡이", "막대형손잡이", "막대손잡이",
+          "lever", "leverhandle", "pushbar", "panicbar"
+        ],
+        forbiddenWords: ["회전문", "도어클로저", "revolvingdoor", "doorcloser"],
+        traps: [
+          {
+            keywords: ["자동문", "센서문", "슬라이딩", "automatic", "autodoor", "sliding"],
+            ko: "좋은 생각이지만 현재 도서관 리모델링 예산이 부족해 문짝 전체와 전기 공사를 할 수 없습니다! 문짝은 그대로 두고 ‘손잡이 부품’만 바꾸는 방법을 찾아보세요.",
+            en: "Great idea, but the library budget cannot cover full electrical door replacement right now! Find a way to swap just the 'handle hardware' on the existing door."
+          },
+          {
+            keywords: ["도어클로저", "doorcloser", "closer"],
+            ko: "도어클로저는 문을 자동으로 닫아주는 상단 장치입니다! 오히려 장력이 세면 문을 열기 더 무거워져요. 손으로 잡고 여는 ‘손잡이 형태’를 바꿔보세요.",
+            en: "A door closer is the overhead device that pulls a door shut—increasing its tension actually makes the door heavier to open! Look at changing the shape of the handle itself."
+          },
+          {
+            keywords: ["회전문", "revolving"],
+            ko: "회전문은 휠체어나 유모차, 보행 보조기구 이용자에게 오히려 더 큰 물리적 장벽이 됩니다! 손잡이 부품을 바꿔보세요.",
+            en: "Revolving doors actually create an even bigger barrier for wheelchairs, strollers, and mobility aids! Try changing the door handle instead."
+          }
+        ]
+      },
+      {
+        id: 2,
+        badge: "STAGE 2 / 7",
+        principleId: 2,
+        ko: {
+          title: "멈춰버린 주문",
+          subtitle: "탐구 주제: 다양한 눈높이와 신체를 포용하는 인터페이스",
+          principle: "UD 제2원칙: 사용상의 유연성 (Flexibility in Use)",
+          problem: "점심시간의 무인 카페입니다. 휠체어를 탄 직장인과 초등학생이 키오스크 화면을 한참 올려다보다가 결국 주문을 포기하고 돌아섰습니다. 기계 고장도 아니고 결제 수단도 있었습니다. 화면 우측 하단 구석에 숨겨진 <strong>‘이 기능’</strong>을 활성화하면 해결되는데, 무엇일까요?",
+          personas: [
+            { icon: "♿", name: "휠체어 이용 직장인" },
+            { icon: "🧒", name: "초등학생 어린이" },
+            { icon: "👵", name: "작은 키의 어르신" }
+          ],
+          hint: "💡 힌트: 앉은키나 작은 키에서는 화면 위쪽 버튼이 보이지도, 손이 닿지도 않습니다. 위쪽의[시야 높이 체험 스위치]를 눌러 확인하고, 화면 안쪽에 적힌 <strong>‘[ ㄴㅇ ㅎㅁ ]’</strong>(또는 낮은 자세 모드)을 찾아보세요!",
+          canonicalAnswer: "낮은 화면",
+          choices: ["낮은 화면 (낮은 자세 모드)", "음량 최대 확대", "고해상도 광고 배너", "현금 결제 전용 모드"],
+          explanation: "평균 성인의 서 있는 키(약 160~170cm)만을 기준으로 고정된 키오스크는 휠체어 이용자, 어린이, 저신장자에게 물리적·시각적 장벽이 됩니다. 조작 UI 전체를 아래로 내려주는 <strong>‘낮은 화면(낮은 자세 모드 / 배리어프리 키오스크 모드)’</strong>는 숨겨진 옵션이 아니라 누구나 바로 켤 수 있는 기본 기능이어야 합니다."
+        },
+        en: {
+          title: "The Unreachable Order",
+          subtitle: "Focus: Interfaces that adapt to diverse eye levels and heights",
+          principle: "UD Principle 2: Flexibility in Use",
+          problem: "At a self-service cafe during lunch hour, an office worker using a wheelchair and an elementary school student stared up at the tall kiosk screen before giving up on their orders. The machine works fine. Activating <strong>this feature</strong> tucked away in the bottom-right corner of the screen solves the problem. What is it?",
+          personas: [
+            { icon: "♿", name: "Wheelchair User" },
+            { icon: "🧒", name: "Elementary Student" },
+            { icon: "👵", name: "Petite Senior" }
+          ],
+          hint: "💡 Hint: From a seated or shorter height, the top menu buttons are out of reach and darkened by viewing angles. Click the [Eye-Level Simulation Switch] above and look for <strong>‘L__ S_____ Mode’</strong> in the bottom-right corner of the kiosk!",
+          canonicalAnswer: "Low Screen Mode",
+          choices: ["Low Screen Mode (Reachability)", "Max Audio Volume", "4K Ad Banner", "Cash-Only Mode"],
+          explanation: "Kiosks fixed solely at a standing adult's eye level (160–170cm) create physical and visual barriers for wheelchair users, children, and people of short stature. A <strong>Low Screen Mode (Accessible Reach Mode)</strong> that shifts all controls downward should be a prominent default feature."
+        },
+        answers: [
+          "낮은화면", "낮은화면모드", "낮은자세", "낮은자세모드", "화면내리기",
+          "하단배치", "하단모드", "배리어프리모드", "배리어프리키오스크", "높이조절", "눈높이조절",
+          "lowscreen", "lowscreenmode", "lowposturemode", "lowmode", "reachability", "lowermode", "accessiblemode"
+        ],
+        forbiddenWords: ["음량최대확대", "고해상도광고배너", "현금결제전용모드", "maxaudiovolume", "4kadbanner", "cashonlymode"],
+        traps: [
+          {
+            keywords: ["음성", "점자", "이어폰", "음량", "소리", "voice", "braille", "volume", "audio"],
+            ko: "음성·점자 안내도 시각장애인을 위해 꼭 필요한 배리어프리 기능이지만, 지금 화면 속 두 사람(휠체어 이용자와 어린이)은 ‘손이 화면 위쪽에 닿지 않는 높이 문제’를 겪고 있습니다. 화면 구석의 버튼을 자세히 살펴보세요!",
+            en: "Voice and braille guidance are essential for blind users, but right now the wheelchair user and child are facing a 'height and reach barrier' at the top of the screen. Inspect the bottom-right corner of the kiosk!"
+          }
+        ]
+      },
+      {
+        id: 3,
+        badge: "STAGE 3 / 7",
+        principleId: 4,
+        ko: {
+          title: "침묵의 비상벨",
+          subtitle: "탐구 주제: 두 가지 이상의 감각 채널을 통한 안전 정보 전달",
+          principle: "UD 제4원칙: 쉽게 인지할 수 있는 정보 (Perceptible Information)",
+          problem: "지하 쇼핑몰에 화재경보가 울렸습니다! 비상 사이렌 소리가 요란하게 울려 퍼지지만, 노이즈캔슬링 이어폰으로 음악을 크게 듣던 청년과 청각장애인 여행객은 영문도 모른 채 벤치에 앉아 있습니다. 경보기 위쪽 빈칸 <strong>[ ? ]</strong>에 어떤 시각 장치가 함께 설치되어야 할까요?",
+          personas: [
+            { icon: "🎧", name: "이어폰 착용 청년" },
+            { icon: "🧳", name: "청각장애인 여행객" },
+            { icon: "👵", name: "난청이 있는 어르신" }
+          ],
+          hint: "💡 힌트: 위급한 안전 정보가 오직 ‘청각(소리)’이라는 하나의 감각으로만 전달되고 있습니다. 소리를 듣지 못하는 상황에서도 반사적으로 위험을 알아차리게 하는 번쩍이는 <strong>‘ㄱㄱㄷ’</strong> 또는 <strong>‘시각경보기(점멸등)’</strong>가 필요합니다.",
+          canonicalAnswer: "경광등 (시각경보기)",
+          choices: ["경광등 (시각경보기)", "사이렌 스피커 추가", "음성 대피 방송", "점자 안내판 부착"],
+          explanation: "비상 대피와 같은 생명·안전 정보는 반드시 <strong>두 가지 이상의 감각 채널(청각+시각, 시각+촉각 등)</strong>로 동시에 전달되어야 합니다. <strong>시각경보기(경광등/점멸등, Strobe light)</strong>는 청각장애인뿐만 아니라 시끄러운 기계실 근무자, 이어폰 사용자, 난청 어르신 모두의 생명을 지킵니다."
+        },
+        en: {
+          title: "The Silent Emergency Alarm",
+          subtitle: "Focus: Delivering critical safety info through multiple sensory channels",
+          principle: "UD Principle 4: Perceptible Information",
+          problem: "A fire alarm has gone off in the underground mall! A loud siren is blaring, yet a youth wearing noise-canceling earphones and a deaf traveler remain seated on a bench, completely unaware. What visual device must be installed in the empty bracket <strong>[ ? ]</strong> above the alarm bell?",
+          personas: [
+            { icon: "🎧", name: "Youth with Earphones" },
+            { icon: "🧳", name: "Deaf Traveler" },
+            { icon: "👵", name: "Hard-of-Hearing Senior" }
+          ],
+          hint: "💡 Hint: Emergency information is currently transmitted through only one sense: hearing. We need a bright flashing visual signal—called a <strong>‘S_____ Light’</strong> or <strong>‘Visual Alarm (Flashing Beacon)’</strong>.",
+          canonicalAnswer: "Strobe Light (Visual Alarm)",
+          choices: ["Strobe Light (Visual Alarm)", "Extra Siren Speaker", "Voice PA Broadcast", "Braille Wall Plaque"],
+          explanation: "Life-critical safety alerts must always be delivered through <strong>two or more sensory channels (audible + visual + tactile)</strong> simultaneously. A <strong>Flashing Strobe Light (Visual Alarm)</strong> protects deaf citizens, seniors with hearing loss, workers in noisy spaces, and people wearing earphones alike."
+        },
+        answers: [
+          "경광등", "경광등시각경보기", "점멸등", "시각경보기", "시각경보", "스트로브", "스트로브라이트",
+          "불빛", "경보등", "점멸신호", "발광장치", "비상경광등", "비상점멸등",
+          "strobe", "strobelight", "flashinglight", "visualalarm", "beacon", "emergencybeacon", "flasher"
+        ],
+        forbiddenWords: ["사이렌스피커추가", "음성대피방송", "점자안내판부착", "extrasirenspeaker", "voicepabroadcast", "braillewallplaque"],
+        traps: [
+          {
+            keywords: ["스피커", "앰프", "볼륨", "데시벨", "사이렌", "음성", "방송", "speaker", "siren", "volume", "voice", "broadcast"],
+            ko: "소리를 아무리 더 크게 키워도 청각장애인이나 노이즈캔슬링 이어폰 사용자에게는 전달되지 않습니다! ‘청각’이 아닌 ‘시각(눈으로 보는 빛)’ 장치를 추가해 보세요.",
+            en: "Making the sound louder still won't alert deaf travelers or people wearing noise-canceling earphones! Add a 'visual (flashing light)' device instead of another audio device."
+          },
+          {
+            keywords: ["점자", "braille"],
+            ko: "점자는 손끝으로 직접 만져야 읽을 수 있어서, 멀리서도 즉시 알아차려야 하는 화재 비상경보 장치로는 적합하지 않습니다. 번쩍이는 빛 장치를 찾아보세요!",
+            en: "Braille requires direct touch up close, so it cannot alert people across a room during a sudden fire emergency. Look for a bright flashing light device!"
+          }
+        ]
+      },
+      {
+        id: 4,
+        badge: "STAGE 4 / 7",
+        principleId: 7,
+        ko: {
+          title: "가로막힌 개찰구",
+          subtitle: "탐구 주제: 체형과 이동 보조기구에 구애받지 않는 넉넉한 공간",
+          principle: "UD 제7원칙: 접근과 사용을 위한 충분한 공간 (Size and Space for Approach and Use)",
+          problem: "지하 쇼핑몰과 연결된 지하철역 입구입니다. 좁은 삼발이 회전 개찰구(폭 45cm) 앞에서 휠체어 이용자, 유모차를 미는 부모님, 대형 캐리어를 든 여행객이 회전 막대에 걸려 들어가지 못하고 있습니다. 역무원을 부르지 않고도 모두가 스스로 통과하려면 어떤 개찰구(통로)를 설치해야 할까요?",
+          personas: [
+            { icon: "♿", name: "전동휠체어 이용자" },
+            { icon: "👶", name: "유모차 동반 보호자" },
+            { icon: "🧳", name: "대형 캐리어 여행객" }
+          ],
+          hint: "💡 힌트: 삼발이 회전 막대는 폭이 45cm밖에 되지 않아 휠체어(약 70cm)나 유모차가 통과할 수 없습니다. 위쪽 [개찰구 폭 비교 스위치]를 눌러 확인하고, 회전 막대 없이 폭을 90cm 이상으로 넓힌 <strong>‘ㄴㅇ ㅌㄹ’</strong>(또는 <strong>‘광폭 개찰구’</strong>)를 입력해 보세요!",
+          canonicalAnswer: "넓은 통로 (광폭 개찰구)",
+          choices: ["넓은 통로 (광폭 개찰구)", "역무원 호출벨 설치", "회전식 삼발이 증설", "비상용 사다리 비치"],
+          explanation: "신체 크기나 자세, 이동 보조기구(휠체어, 유모차, 보행기, 큰 짐) 유무에 관계없이 누구나 걸림 없이 접근하고 통과할 수 있어야 합니다. 관련 기준(교통약자법 시행규칙 별표1: 개찰구 유효 폭 90cm 이상, KS P ISO 7176: 휠체어 최대 폭 70cm 기준)에 맞춘 <strong>넓은 통로(광폭 자동 개찰구)</strong>는 교통약자와 여행객, 일반 시민 모두의 이동 효율을 높입니다."
+        },
+        en: {
+          title: "The Blocked Turnstile",
+          subtitle: "Focus: Ample space regardless of body size or mobility aids",
+          principle: "UD Principle 7: Size and Space for Approach and Use",
+          problem: "At the subway station entrance connected to the underground mall, a wheelchair user, a parent pushing a stroller, and a traveler pulling a large suitcase are stuck in front of narrow tripod turnstiles (45cm wide). To let everyone pass independently without calling station staff, what kind of gate or passage should be installed?",
+          personas: [
+            { icon: "♿", name: "Wheelchair User" },
+            { icon: "👶", name: "Parent with Stroller" },
+            { icon: "🧳", name: "Traveler with Suitcase" }
+          ],
+          hint: "💡 Hint: Tripod turnstile bars leave only 45cm of width, blocking wheelchairs (~70cm) and strollers. Click the [Gate Width Switch] above and enter <strong>‘W___ Gate’</strong> (or <strong>‘Wide Passage’</strong>)!",
+          canonicalAnswer: "Wide Accessible Gate",
+          choices: ["Wide Accessible Gate (Wide Passage)", "Staff Call Bell", "More Tripod Turnstiles", "Emergency Step Ladder"],
+          explanation: "Regardless of body size, posture, or mobility aids (wheelchairs, strollers, walkers, luggage), sufficient clearance must be provided. Under Korean accessibility standards (Mobility Enhancement Act Enforcement Rule: minimum 90cm gate clearance; KS P ISO 7176: 70cm wheelchair width), a <strong>90cm+ Wide Accessible Gate</strong> benefits everyone."
+        },
+        answers: [
+          "넓은통로", "넓은개찰구", "광폭개찰구", "광폭통로", "넓은통로광폭개찰구", "자동문개찰구",
+          "플랩도어", "배리어프리개찰구", "장애인개찰구", "유모차개찰구", "폭넓은개찰구", "통로확장",
+          "widegate", "wideaccessiblegate", "wideaccessiblegatewidepassage", "widepassage", "barrierfreegate", "flapdoorgate", "widergate", "accessiblegate"
+        ],
+        forbiddenWords: ["역무원호출벨설치", "회전식삼발이증설", "비상용사다리비치", "staffcallbell", "moretripodturnstiles", "emergencystepladder"],
+        traps: [
+          {
+            keywords: ["호출벨", "인터폰", "역무원", "벨", "도움벨", "callbell", "intercom", "staff"],
+            ko: "역무원 호출벨을 누르고 직원이 와서 비상문을 열어줄 때까지 기다리게 하는 것은 ‘독립적이고 자발적인 이동’이 아닙니다! 누구나 카드만 찍고 스스로 통과할 수 있는 통로 형태를 찾아보세요.",
+            en: "Waiting for station staff to come unlock a side gate after pressing a call bell is not independent mobility! Look for a gate design that lets everyone tap their card and pass through on their own."
+          }
+        ]
+      },
+      {
+        id: 5,
+        badge: "STAGE 5 / 7",
+        principleId: 3,
+        ko: {
+          title: "색깔 잃은 노선도",
+          subtitle: "탐구 주제: 색각 특성이나 언어에 상관없이 직관적인 길 찾기",
+          principle: "UD 제3원칙: 간단하고 직관적인 사용 (Simple and Intuitive Use)",
+          problem: "개찰구를 통과해 들어온 복잡한 지하철 환승역입니다. 외국인 관광객과 적녹색약이 있는 시민이 안내판을 보며 길을 헤매고 있습니다. 안내판에는 분명히 ‘초록색 선은 2호선, 빨간색 선은 신분당선’이라고 적혀 있는데, 적녹색약 시야에서는 두 선이 구분되지 않습니다. 색상 외에 무엇을 함께 표기해야 할까요?",
+          personas: [
+            { icon: "👓", name: "적녹색약 시민" },
+            { icon: "🧳", name: "외국인 관광객" },
+            { icon: "👵", name: "저시력 어르신" }
+          ],
+          hint: "💡 힌트: 위쪽의 [적녹색약 시야 필터]를 켜고 꺼보세요! 파란색(4호선)은 구분되지만 초록색(2호선)과 빨간색(신분당선)은 비슷하게 보입니다. 색깔이 헷갈려도 구별할 수 있도록 숫자와 <strong>‘ㄱㅎ’</strong>(또는 <strong>도형·픽토그램</strong>)를 함께 써야 합니다.",
+          canonicalAnswer: "기호 (픽토그램 / 도형)",
+          choices: ["기호 (픽토그램 / 도형)", "파스텔톤 색상 변경", "안내문 글자 수 늘리기", "유광 바닥 코팅"],
+          explanation: "색상(Color) 단일 요소에만 의존한 정보 설계는 선천적 적녹색각 이상자(남성 약 5~8%, 여성 약 0.5% 내외 — 국내에서는 남성 약 5.9%, 여성 약 0.4% 수준으로 보고, <a href=\"https://health.kdca.go.kr/healthinfo/biz/health/gnrlzHealthInfo/gnrlzHealthInfo/gnrlzHealthInfoView.do?cntnts_sn=1469\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline text-amber-300 hover:text-amber-200 font-bold\">질병관리청 국가건강정보포털</a> 참고)나 어두운 조명 환경의 사용자를 배제합니다. 색상과 함께 <strong>명도 대비, 숫자, 노선 기호, 도형(●·◆·■), 픽토그램, 선 패턴(실선·점선)</strong>을 병기해야 누구나 직관적으로 길을 찾을 수 있습니다."
+        },
+        en: {
+          title: "The Colorless Transfer Map",
+          subtitle: "Focus: Intuitive wayfinding regardless of color vision or language",
+          principle: "UD Principle 3: Simple and Intuitive Use",
+          problem: "Inside the busy subway transfer station past the gates, a foreign tourist and a citizen with red-green color vision deficiency (CVD) are lost. The sign says 'Follow the Green line for Line 2, Red line for Shinbundang Line,' but under red-green CVD both lines look nearly identical. Besides color, what should be marked on the lines?",
+          personas: [
+            { icon: "👓", name: "Citizen with Red-Green CVD" },
+            { icon: "🧳", name: "Foreign Tourist" },
+            { icon: "👵", name: "Low-Vision Senior" }
+          ],
+          hint: "💡 Hint: Toggle the [Red-Green CVD Filter] above! Blue (Line 4) stands out, but Green (Line 2) and Red (Shinbundang) merge into similar brownish tones. Pair colors with numbers and <strong>‘S______’</strong> (or <strong>Shapes / Pictograms</strong>).",
+          canonicalAnswer: "Symbols (Pictograms / Shapes)",
+          choices: ["Symbols (Pictograms / Shapes)", "Pastel Color Palette", "Longer Text Paragraphs", "Glossy Floor Polish"],
+          explanation: "Information design that relies solely on color excludes people with congenital red-green color vision deficiency (approx. 5–8% of males and ~0.5% of females; reported at 5.9% of males and 0.4% of females in Korea, source: <a href=\"https://health.kdca.go.kr/healthinfo/biz/health/gnrlzHealthInfo/gnrlzHealthInfo/gnrlzHealthInfoView.do?cntnts_sn=1469\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline text-amber-300 hover:text-amber-200 font-bold\">KDCA National Health Information Portal</a>). Pairing colors with <strong>brightness contrast, numbers, geometric shapes (●·◆·■), pictograms, and line patterns</strong> ensures intuitive wayfinding for all."
+        },
+        answers: [
+          "기호", "기호픽토그램", "기호픽토그램도형", "픽토그램", "도형", "패턴", "번호", "숫자",
+          "아이콘", "문자", "글자", "모양", "심볼", "명도", "명도대비",
+          "symbol", "symbols", "symbolspictogramsshapes", "pictogram", "pictograms", "shape", "shapes", "pattern", "patterns", "number", "numbers", "icon", "icons"
+        ],
+        forbiddenWords: ["파스텔톤색상변경", "안내문글자수늘리기", "유광바닥코팅", "pastelcolorpalette", "longertextparagraphs", "glossyfloorpolish"],
+        traps: [
+          {
+            keywords: ["파스텔", "형광", "페인트", "유광", "코팅", "pastel", "paint", "glossy"],
+            ko: "색깔의 종류만 바꾸거나 바닥을 유광으로 코팅하면 빛 반사(눈부심) 때문에 오히려 더 구분하기 어려워집니다! 색이 보이지 않아도 구별할 수 있는 ‘모양(도형·기호·숫자)’을 추가해 보세요.",
+            en: "Merely changing paint shades or adding glossy floor coating increases glare and still relies on color! Add non-color visual cues like shapes, symbols, or numbers."
+          }
+        ]
+      },
+      {
+        id: 6,
+        badge: "STAGE 6 / 7",
+        principleId: 5,
+        ko: {
+          title: "신호가 바뀐 횡단보도 한가운데",
+          subtitle: "탐구 주제: 걸음이 느리거나 실수해도 위험해지지 않는 안전 설계",
+          principle: "UD 제5원칙: 오류에 대한 포용력 (Tolerance for Error)",
+          problem: "지하철역을 나와 시청으로 향하는 왕복 8차선(폭 32m) 광장 횡단보도입니다. 걸음이 느린 어르신과 목발을 짚은 청년이 절반쯤 건넜을 때 보행 신호가 끝나버려, 쌩쌩 달리는 차들 사이 도로 중앙선에 위험하게 고립되었습니다. 한 번에 다 건너지 못해도 중간에서 안전하게 대기할 수 있도록 도로 중앙에 <strong>‘무엇’</strong>을 설치해야 할까요?",
+          personas: [
+            { icon: "👵", name: "걸음이 느린 어르신" },
+            { icon: "🩼", name: "목발을 짚은 부상자" },
+            { icon: "👶", name: "아이와 함께 건너는 가족" }
+          ],
+          hint: "💡 힌트: 사람이 조금 늦게 출발하거나 걸음이 느리더라도 사고로 이어지지 않게 완충해 주는 설계가 ‘오류에 대한 포용력’입니다. 넓은 횡단보도 한가운데에 연석과 안전 기둥으로 만든 섬 모양의 안전 대기 공간을 <strong>‘ㅂㅎㅅ’</strong>(또는 <strong>중앙 보행 안전지대 / 교통섬</strong>)이라고 부릅니다.",
+          canonicalAnswer: "보행섬 (중앙 대기 공간)",
+          choices: ["보행섬 (중앙 대기 공간)", "보행 잔여시간 표시기", "보행신호 음성안내 보조장치", "고속 주행 유도 차선"],
+          explanation: "교통신호 설계 시 보행 시간은 보통 초당 1.0m(노인·어린이 보호구역은 0.7~0.8m/s, 경찰청 교통신호기 설치·운영 매뉴얼 기준)를 기준으로 산정됩니다. 그러나 넓은 도로에서는 보행 속도가 더 느리거나 뒤늦게 진입한 보행자가 신호 내에 다 건너지 못할 수 있습니다. 도로 중앙에 <strong>보행섬(중앙 보행 안전지대 / Pedestrian Refuge Island)</strong>을 설치하면 설령 한 번에 건너지 못하더라도 차로부터 안전하게 보호받으며 다음 신호를 기다릴 수 있습니다."
+        },
+        en: {
+          title: "Stranded Mid-Crosswalk",
+          subtitle: "Focus: Fail-safe design where slower pace or mistakes aren't fatal",
+          principle: "UD Principle 5: Tolerance for Error",
+          problem: "Outside the subway station lies an 8-lane (32m wide) avenue crosswalk leading to City Hall. A slow-walking senior citizen and a youth on crutches made it only halfway across before the green light ended, leaving them stranded on the center line between speeding cars. What physical safety space must be built in the middle of the road so pedestrians can safely wait for the next signal?",
+          personas: [
+            { icon: "👵", name: "Slow-Walking Senior" },
+            { icon: "🩼", name: "Injured Youth on Crutches" },
+            { icon: "👶", name: "Family with Young Children" }
+          ],
+          hint: "💡 Hint: 'Tolerance for Error' means a slower pace or late start doesn't result in danger. A raised, protected waiting area in the middle of a wide crosswalk is called a <strong>‘Pedestrian R_____ Island’</strong> (or <strong>Central Safety Island</strong>).",
+          canonicalAnswer: "Pedestrian Refuge Island",
+          choices: ["Pedestrian Refuge Island", "Countdown Timer Display", "Audible Pedestrian Signal", "High-Speed Traffic Lane"],
+          explanation: "Pedestrian signal timings are typically calculated using a walking speed of 1.0m/s (0.7–0.8m/s in protection zones, per the Korean National Police Agency Traffic Signal Manual). On wide multi-lane roads, slower pedestrians or late starters may not finish crossing in one cycle. A <strong>Pedestrian Refuge Island (Central Waiting Space)</strong> provides a bollard-protected haven in the middle of the road."
+        },
+        answers: [
+          "보행섬", "보행섬중앙대기공간", "교통섬", "안전섬", "중앙보행섬", "중앙대기공간",
+          "보행안전지대", "중앙안전지대", "대기섬", "중간대기공간", "횡단보도보행섬",
+          "refugeisland", "pedestrianrefugeisland", "pedestrianisland", "safetyisland", "trafficisland", "medianisland", "centralwaitingisland", "centralrefuge"
+        ],
+        forbiddenWords: ["고속주행유도차선", "육교", "highspeedtrafficlane", "overpass"],
+        traps: [
+          {
+            keywords: ["잔여시간", "표시기", "타이머", "신호등", "숫자", "countdown", "timer", "display"],
+            ko: "보행 잔여시간 표시기도 남은 시간을 알려주는 아주 훌륭한 보조 장치입니다! 하지만 지금 문제는 이미 도로 한가운데까지 걸어왔다가 신호가 바뀐 보행자가 차들을 피해 서 있을 수 있는 ‘도로 중앙의 물리적 안전 공간’을 묻고 있습니다.",
+            en: "A Countdown Timer Display is a great assistive device! However, this question asks for the 'physical protected space in the middle of the road' where someone already halfway across can safely stand and wait."
+          },
+          {
+            keywords: ["음성", "소리", "음향", "보조장치", "신호기", "audible", "voice", "sound", "aps"],
+            ko: "보행신호 음성안내 보조장치는 시각장애인에게 신호 상태를 알려주는 장치(제4원칙)입니다! 지금 도로 중앙선에 고립된 보행자들을 차로부터 지켜줄 ‘도로 중앙의 물리적 대기 공간’을 찾아보세요.",
+            en: "An Audible Pedestrian Signal helps blind pedestrians know when the light turns green (Principle 4). Look for the 'physical waiting space in the center of the road' that protects slow walkers from traffic!"
+          },
+          {
+            keywords: ["육교", "지하도", "계단", "overpass", "underpass", "bridge"],
+            ko: "육교나 지하도는 수많은 계단과 긴 우회 동선을 만들어 어르신, 휠체어, 유모차, 목발 이용자에게 또 다른 거대한 장벽이 됩니다! 평면 횡단보도 중앙에 만드는 안전 공간을 찾아보세요.",
+            en: "Overpasses and underpasses require long stairs or detours, creating an even bigger barrier for seniors, wheelchairs, and crutches! Find the safety space built right at street level in the center of the crosswalk."
+          }
+        ]
+      },
+      {
+        id: 7,
+        badge: "STAGE 7 / 7 (FINAL)",
+        principleId: 1,
+        ko: {
+          title: "분리된 입구 (최종장)",
+          subtitle: "탐구 주제: 모두를 동등하게 존중하는 유니버설디자인의 제1원칙",
+          principle: "UD 제1원칙: 공평한 사용 (Equitable Use)",
+          problem: "미궁의 마지막 현장, 시청 본관 앞입니다. 정문은 웅장한 대리석 계단뿐이고, 그 옆에는 <strong>[휠체어 및 유모차는 건물 뒤편 화물용 승강기를 이용하세요]</strong>라는 안내판이 서 있습니다. 물리적으로는 건물에 들어갈 수 있지만, 감사관은 이 건물의 유니버설디자인 점수를 ‘0점(낙제)’으로 판정했습니다. 이 설계가 어긴 유니버설디자인의 제1원칙 <strong>[ ㅇㅇ한 사용 ]</strong>은 무엇일까요?",
+          personas: [
+            { icon: "♿", name: "뒷문으로 돌아가는 시민" },
+            { icon: "👶", name: "유모차 이용 가족" },
+            { icon: "📦", name: "화물칸에 섞인 방문객" }
+          ],
+          hint: "💡 힌트: 물리적으로 들어갈 수 있다고 해서 모두 좋은 디자인은 아닙니다. 특정 사용자를 쓰레기통이 있는 뒷문 화물칸으로 분리해 소외감과 낙인(Stigma)을 주는 것은 모두를 차별 없이 존중하는 <strong>‘[ ㄱㅍ ]한 사용 (Equitable Use)’</strong> 원칙에 어긋납니다.",
+          canonicalAnswer: "공평한 사용",
+          choices: ["공평한 사용 (차별 없는 동등한 사용)", "사용상의 유연성 (제2원칙)", "간단하고 직관적인 사용 (제3원칙)", "쉽게 인지할 수 있는 정보 (제4원칙)"],
+          explanation: "유니버설디자인의 제1원칙은 <strong>‘공평한 사용(Equitable Use)’</strong>입니다. 단순히 물리적 장벽만 임시방편으로 해결해 뒷문이나 화물칸으로 돌아가게 만드는 것은 사용자를 분리(Segregation)하고 소외감을 줍니다. 처음부터 정문 자체를 완만한 통합 경사 광장으로 설계해 <strong>모두가 같은 길로, 같은 경험을 하며 당당하게 들어가는 것</strong>이 진정한 유니버설디자인입니다."
+        },
+        en: {
+          title: "The Segregated Entrance (Final Boss)",
+          subtitle: "Focus: The 1st Principle of UD—respecting everyone equally without stigma",
+          principle: "UD Principle 1: Equitable Use",
+          problem: "You have reached the final site: City Hall. The grand front entrance consists only of marble stairs, with a sign reading: <strong>[Wheelchairs & Strollers: Please use the freight elevator at the back of the building]</strong>. Although people can physically enter the building, the inspector gave this design a score of ZERO. Which 1st Principle of Universal Design—<strong>[ ________ Use ]</strong>—did this design violate?",
+          personas: [
+            { icon: "♿", name: "Citizen Sent to Back Alley" },
+            { icon: "👶", name: "Family with Stroller" },
+            { icon: "📦", name: "Visitors Mixed with Freight" }
+          ],
+          hint: "💡 Hint: Physical access alone is not enough. Forcing certain citizens to detour through a dark back-alley freight elevator creates segregation and stigma. It violates the 1st Principle of UD: <strong>‘[ E________ ] Use’</strong> (Fair and Equal Use for All).",
+          canonicalAnswer: "Equitable Use",
+          choices: ["Equitable Use (Principle 1)", "Flexibility in Use (Principle 2)", "Simple and Intuitive Use (Principle 3)", "Perceptible Information (Principle 4)"],
+          explanation: "The 1st Principle of Universal Design is <strong>Equitable Use</strong>. Merely providing a segregated back-alley freight entrance isolates and stigmatizes users. True Universal Design builds an integrated sloped plaza right at the main entrance so <strong>everyone enters together through the same front door with dignity</strong>."
+        },
+        answers: [
+          "공평", "공평한사용", "공평한사용차별없는동등한사용", "평등", "평등한사용",
+          "차별없는사용", "동등", "동등한사용", "공정", "공정한사용", "공평성",
+          "equitable", "equitableuse", "equitableuseprinciple1", "equal", "equaluse", "equality", "equity", "nonsegregated"
+        ],
+        forbiddenWords: [],
+        traps: [
+          {
+            keywords: ["경사로", "엘리베이터", "승강기", "리프트", "슬로프", "ramp", "elevator", "lift", "slope"],
+            ko: "정문에 경사로나 엘리베이터를 설치하는 것은 훌륭한 물리적 해결책입니다! 그런데 이번 최종 보스 문제는 ‘왜 누구는 정문으로 가고 누구는 화물용 뒷문으로 돌아가야 하는가?’라는 유니버설디자인의 제1원칙 이름([ ㅇㅇ한 사용 ] / Equitable Use)을 묻고 있습니다.",
+            en: "Installing a ramp or elevator at the front entrance is the right physical solution! However, this final boss question asks for the name of the 1st Principle of Universal Design ([ ________ Use ]) that forbids segregating users to a back door."
+          },
+          {
+            keywords: ["유연성", "유연한사용", "직관적", "직관적인사용", "flexibility", "intuitive", "simple"],
+            ko: "그 원칙도 유니버설디자인 7대 원칙 중 하나(제2원칙 또는 제3원칙)이지만, ‘누구도 분리하거나 낙인찍지 않고 똑같은 정문으로 당당하게 들어가게 한다’는 제1원칙([ 공평한 사용 ] / Equitable Use)을 찾아보세요!",
+            en: "That is one of the 7 Principles (Principle 2 or 3), but look for the 1st Principle—the one stating that all users deserve the same dignified entrance without segregation ([ Equitable Use ])!"
+          },
+          {
+            keywords: ["인지", "쉽게인지", "정보의쉬운인지", "perceptible"],
+            ko: "‘쉽게 인지할 수 있는 정보(Perceptible Information)’는 스테이지 3(화재경보기)에서 다룬 제4원칙입니다! 모든 사용자를 차별이나 분리 없이 동등하게 존중하는 제1원칙([ 공평한 사용 ] / Equitable Use)을 찾아보세요.",
+            en: "'Perceptible Information' is Principle 4 (covered in Stage 3's fire alarm)! Look for Principle 1, which ensures equal, non-segregating access for all ([ Equitable Use ])."
+          }
+        ]
+      }
+    ];
+
+    // =========================================================================
+    // 상태 변수
+    // =========================================================================
+    let currentLang = 'ko';
+    let currentStageIndex = 0;
+    let score = 100;
+    let clearedStages = [false, false, false, false, false, false, false];
+    let hintUsedStages = [false, false, false, false, false, false, false];
+    let simToggleState = [false, false, false, false, true, false, false]; // Stage 5(index 4)는 기본 색약 필터 ON
+    let shuffledStageChoiceIndices = [];
+    let soundEnabled = true;
+    let highContrast = false;
+    let audioCtx = null;
+    let lastFocusedElementBeforeModal = null;
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function initShuffledChoices() {
+      shuffledStageChoiceIndices = STAGES.map(st => shuffleArray([0, 1, 2, 3]));
+    }
+
+    function isStageUnlocked(idx) {
+      if (idx === 0) return true;
+      if (clearedStages[idx]) return true;
+      return clearedStages[idx - 1];
+    }
+
+    // =========================================================================
+    // 사운드 효과 (Web Audio API)
+    // =========================================================================
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(freq, duration = 0.08, type = 'square', gainVal = 0.05) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function sfxClick() { playTone(520, 0.05, 'triangle', 0.05); }
+    function sfxClue() {
+      playTone(640, 0.06, 'sine', 0.05);
+      setTimeout(() => playTone(880, 0.08, 'sine', 0.05), 55);
+    }
+    function sfxSuccess() {
+      [523.25, 659.25, 783.99, 1046.5].forEach((n, i) => {
+        setTimeout(() => playTone(n, 0.13, 'triangle', 0.07), i * 85);
+      });
+    }
+    function sfxError() {
+      playTone(210, 0.12, 'sawtooth', 0.05);
+      setTimeout(() => playTone(165, 0.18, 'sawtooth', 0.05), 110);
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('soundBtn');
+      btn.setAttribute('aria-pressed', String(soundEnabled));
+      updateStaticUIText();
+      if (soundEnabled) sfxClick();
+    }
+
+    // =========================================================================
+    // 언어 전환 / 글자 크기 / 고대비 모드
+    // =========================================================================
+    function toggleLanguage() {
+      sfxClick();
+      currentLang = currentLang === 'ko' ? 'en' : 'ko';
+      document.documentElement.lang = currentLang;
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('lang', currentLang);
+        window.history.replaceState({}, '', url);
+      } catch (e) {}
+      updateStaticUIText();
+      renderStageDots();
+      if (!document.getElementById('stageScreen').classList.contains('hidden')) {
+        loadStage(currentStageIndex);
+      }
+      if (!document.getElementById('endingScreen').classList.contains('hidden')) {
+        showEndingScreen(false);
+      }
+    }
+
+    function updateStaticUIText() {
+      const t = UI_TEXT[currentLang];
+      document.getElementById('headerTitle').textContent = t.headerTitle;
+      document.getElementById('scoreLabel').textContent = t.scoreLabel;
+      document.getElementById('langToggleLabel').textContent = currentLang === 'ko' ? 'KO | EN' : 'EN | KO';
+      document.getElementById('contrastLabel').textContent = highContrast ? t.contrastOn : t.contrastOff;
+      document.getElementById('guideBtnLabel').textContent = t.guideBtnLabel;
+      document.getElementById('soundIconWrap').innerHTML = pixelIcon(soundEnabled ? '🔊' : '🔇', 16);
+      document.getElementById('soundLabel').textContent = soundEnabled ? t.soundOn : t.soundOff;
+
+      // 글자 크기 버튼 레이블 (가/가+/가++ vs A/A+/A++)
+      ['fontBtn1', 'fontBtn2', 'fontBtn3'].forEach((id, i) => {
+        const btn = document.getElementById(id);
+        if (btn) btn.textContent = t.fontLabels[i];
+      });
+
+      // 인트로
+      document.getElementById('introBannerSub').textContent = t.introBannerSub;
+      document.getElementById('introRoleBadge').textContent = t.introRoleBadge;
+      document.getElementById('introHeading').innerHTML = t.introHeading;
+      document.getElementById('introDesc').innerHTML = t.introDesc;
+      document.getElementById('introHowToTitle').innerHTML = `${pixelIcon('🔍', 18)} <span>${t.introHowToTitle}</span>`;
+      document.getElementById('introHowToList').innerHTML = t.introHowToItems.map(item => `<li>${item}</li>`).join('');
+      document.getElementById('introStartBtn').innerHTML = `${pixelIcon('🔎', 20)} <span>${t.introStartBtn}</span>`;
+      document.getElementById('introGuideBtn').innerHTML = `${pixelIcon('📘', 18)} <span>${t.introGuideBtn}</span>`;
+
+      // 스테이지 공통 라벨
+      document.getElementById('clueHeaderLabel').innerHTML = `${pixelIcon('👆', 18)} <span>${t.clueHeaderLabel}</span>`;
+      document.getElementById('problemBoxLabel').innerHTML = `${pixelIcon('📋', 16)} <span>${t.problemBoxLabel}</span>`;
+      document.getElementById('personaHeaderLabel').textContent = t.personaHeaderLabel;
+      document.getElementById('answerInput').placeholder = t.answerPlaceholder;
+      document.getElementById('submitBtn').textContent = t.submitBtn;
+      document.getElementById('choiceChipDesc').innerHTML = `${pixelIcon('👆', 15)} <span>${t.choiceChipDesc}</span>`;
+      document.getElementById('acceptedKeywordsHint').textContent = t.acceptedKeywordsHint;
+      document.getElementById('clearBadgeText').innerHTML = `${pixelIcon('🎉', 20)} <span>${t.clearBadgeText}</span>`;
+      document.getElementById('prevStageBtn').textContent = t.prevStageBtn;
+      document.getElementById('skipStageBtn').textContent = t.skipStageBtn;
+
+      // UD 수첩 모달
+      document.getElementById('guideModalTitle').innerHTML = `${pixelIcon('📘', 22)} <span>${t.guideModalTitle}</span>`;
+      document.getElementById('guideModalCloseTopBtn').textContent = t.guideModalCloseTop;
+      document.getElementById('guideModalDesc').innerHTML = t.guideModalDesc;
+      document.getElementById('guideModalCloseBottomBtn').textContent = t.guideModalCloseBottom;
+      document.getElementById('guidePrinciplesList').innerHTML = t.principles.map(p => `
+        <div class="bg-slate-900 border-2 border-slate-600 p-3.5">
+          <span class="text-amber-400 font-black">${p.num}. ${p.title}</span>
+          <p class="text-slate-100 mt-1">${p.desc}</p>
+        </div>
+      `).join('');
+
+      document.getElementById('footerNotice').textContent = t.footerNotice;
+      hydrateStaticPixelIcons();
+    }
+
+    function setFontSize(px) {
+      sfxClick();
+      document.documentElement.style.setProperty('--base-font-size', px + 'px');
+      const map = { 16: 'fontBtn1', 18: 'fontBtn2', 20: 'fontBtn3' };
+      ['fontBtn1', 'fontBtn2', 'fontBtn3'].forEach(id => {
+        const el = document.getElementById(id);
+        if (id === map[px]) {
+          el.className = 'px-2 py-0.5 text-xs font-bold bg-sky-500 text-slate-950';
+        } else {
+          el.className = 'px-2 py-0.5 text-xs font-bold text-slate-200 hover:bg-slate-800';
+        }
+      });
+    }
+
+    function toggleHighContrast() {
+      sfxClick();
+      highContrast = !highContrast;
+      document.body.classList.toggle('high-contrast', highContrast);
+      const btn = document.getElementById('contrastBtn');
+      btn.setAttribute('aria-pressed', String(highContrast));
+      updateStaticUIText();
+    }
+
+    function toggleGuideModal() {
+      sfxClick();
+      const modal = document.getElementById('guideModal');
+      const isOpening = modal.classList.contains('hidden');
+      if (isOpening) {
+        lastFocusedElementBeforeModal = document.activeElement;
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+          const closeBtn = document.getElementById('guideModalCloseTopBtn');
+          if (closeBtn) closeBtn.focus();
+        }, 20);
+      } else {
+        modal.classList.add('hidden');
+        if (lastFocusedElementBeforeModal && typeof lastFocusedElementBeforeModal.focus === 'function') {
+          lastFocusedElementBeforeModal.focus();
+        }
+      }
+    }
+
+    function handleModalKeydown(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        toggleGuideModal();
+        return;
+      }
+      if (e.key === 'Tab') {
+        const modal = document.getElementById('guideModal');
+        const focusables = modal.querySelectorAll('button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    // =========================================================================
+    // 진행 바 및 스테이지 로드
+    // =========================================================================
+    function renderStageDots() {
+      const container = document.getElementById('stageDots');
+      container.innerHTML = '';
+      STAGES.forEach((st, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isCurrent = idx === currentStageIndex && !document.getElementById('stageScreen').classList.contains('hidden');
+        const isDone = clearedStages[idx];
+        const unlocked = isStageUnlocked(idx);
+        btn.disabled = !unlocked;
+        btn.className = `w-6 h-6 text-xs font-black transition flex items-center justify-center border ${
+          isDone
+            ? 'bg-emerald-400 text-slate-950 border-slate-950'
+            : isCurrent
+            ? 'bg-amber-400 text-slate-950 border-slate-950 scale-110'
+            : unlocked
+            ? 'bg-slate-800 text-slate-200 border-slate-600 hover:bg-slate-700'
+            : 'bg-slate-950 text-slate-600 border-slate-800 opacity-50 cursor-not-allowed'
+        }`;
+        btn.innerHTML = isDone ? pixelIcon('✔', 13) : String(idx + 1);
+        btn.title = `Stage ${idx + 1}: ${st[currentLang].title}`;
+        btn.setAttribute('aria-label', `Stage ${idx + 1} ${st[currentLang].title}`);
+        btn.onclick = () => {
+          if (!isStageUnlocked(idx)) return;
+          sfxClick();
+          document.getElementById('introScreen').classList.add('hidden');
+          document.getElementById('endingScreen').classList.add('hidden');
+          document.getElementById('stageScreen').classList.remove('hidden');
+          loadStage(idx);
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function startGame() {
+      sfxClick();
+      document.getElementById('introScreen').classList.add('hidden');
+      document.getElementById('endingScreen').classList.add('hidden');
+      document.getElementById('stageScreen').classList.remove('hidden');
+      loadStage(0);
+    }
+
+    function restartGame() {
+      sfxClick();
+      score = 100;
+      clearedStages = [false, false, false, false, false, false, false];
+      hintUsedStages = [false, false, false, false, false, false, false];
+      simToggleState = [false, false, false, false, true, false, false];
+      initShuffledChoices();
+      updateScore(0);
+      startGame();
+    }
+
+    function updateScore(delta) {
+      score = Math.max(0, score + delta);
+      document.getElementById('scoreDisplay').textContent = score;
+    }
+
+    function loadStage(index) {
+      currentStageIndex = index;
+      const stage = STAGES[index];
+      const langData = stage[currentLang];
+      const t = UI_TEXT[currentLang];
+      const isCleared = clearedStages[index];
+
+      document.getElementById('stageBadge').textContent = stage.badge;
+      document.getElementById('stageTitle').textContent = langData.title;
+      document.getElementById('stageSubtitle').textContent = langData.subtitle;
+      document.getElementById('problemDescription').innerHTML = langData.problem;
+
+      const statusPill = document.getElementById('stageStatusPill');
+      if (isCleared) {
+        statusPill.innerHTML = `${pixelIcon('✔', 13)} <span>${t.statusCleared}</span>`;
+        statusPill.className = 'text-xs font-extrabold px-2.5 py-0.5 bg-emerald-400 text-slate-950 border border-slate-950 inline-flex items-center gap-1';
+      } else {
+        statusPill.textContent = t.statusUnsolved;
+        statusPill.className = 'text-xs font-bold px-2.5 py-0.5 bg-rose-950 text-rose-200 border border-rose-500';
+      }
+
+      // 페르소나 태그
+      const personaContainer = document.getElementById('personaTags');
+      personaContainer.innerHTML = langData.personas
+        .map(p => `<span class="px-2.5 py-1 bg-slate-800 border-2 border-slate-600 text-slate-100 text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5">${pixelIcon(p.icon, 16)}<span>${p.name}</span></span>`)
+        .join('');
+
+      // 보기 칩 (셔플 순서 유지, 클릭 시 입력창에만 채움)
+      const chipsContainer = document.getElementById('choiceChips');
+      chipsContainer.innerHTML = '';
+      if (!shuffledStageChoiceIndices[index]) {
+        shuffledStageChoiceIndices[index] = shuffleArray([0, 1, 2, 3]);
+      }
+      shuffledStageChoiceIndices[index].forEach(choiceIdx => {
+        const choiceText = langData.choices[choiceIdx];
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'btn-retro px-3 py-1.5 bg-slate-800 hover:bg-sky-900 text-sky-200 border-slate-500 text-xs sm:text-sm font-bold';
+        chip.textContent = choiceText;
+        chip.onclick = () => selectChoiceChip(choiceText);
+        chipsContainer.appendChild(chip);
+      });
+
+      // 입력창 초기화
+      const input = document.getElementById('answerInput');
+      input.value = isCleared ? langData.canonicalAnswer : '';
+      input.disabled = isCleared;
+      document.getElementById('submitBtn').disabled = isCleared;
+
+      document.getElementById('answerLabel').innerHTML = index === 6
+        ? (currentLang === 'ko'
+            ? `${pixelIcon('🔑', 18)} <span>이 설계가 어긴 UD 제1원칙 [ ㅇㅇ한 사용 ]은 무엇일까요?</span>`
+            : `${pixelIcon('🔑', 18)} <span>Which 1st Principle of UD [ ________ Use ] was violated?</span>`)
+        : (currentLang === 'ko'
+            ? `${pixelIcon('🔑', 18)} <span>무엇으로 바꾸거나 어떤 장치를 설치해야 할까요?</span>`
+            : `${pixelIcon('🔑', 18)} <span>What device or solution should be installed here?</span>`);
+
+      // 힌트 & 피드백 리셋
+      const hintBox = document.getElementById('hintBox');
+      if (hintUsedStages[index]) {
+        hintBox.innerHTML = langData.hint;
+        hintBox.classList.remove('hidden');
+        document.getElementById('hintBtnText').textContent = t.hintBtnOpen;
+      } else {
+        hintBox.classList.add('hidden');
+        document.getElementById('hintBtnText').textContent = t.hintBtnShow;
+      }
+      document.getElementById('feedbackBox').classList.add('hidden');
+
+      // 클리어 해설 표시
+      const clearBox = document.getElementById('clearBox');
+      if (isCleared) {
+        clearBox.classList.remove('hidden');
+        document.getElementById('principleTag').textContent = langData.principle;
+        document.getElementById('clearExplanation').innerHTML = langData.explanation;
+        const nextBtnText = document.getElementById('nextStageBtnText');
+        nextBtnText.textContent = index < STAGES.length - 1 ? t.nextStageBtnText : t.finalStageBtnText;
+      } else {
+        clearBox.classList.add('hidden');
+      }
+
+      // 기본 단서 로그
+      document.getElementById('clueIcon').innerHTML = pixelIcon('🔍', 28);
+      document.getElementById('clueSpeaker').textContent = t.defaultClueSpeaker;
+      document.getElementById('clueText').textContent = t.defaultClueText;
+
+      // 하단 진행도 및 스테이지 이동 잠금
+      const clearedCount = clearedStages.filter(Boolean).length;
+      document.getElementById('progressText').textContent = t.progressText(clearedCount);
+      document.getElementById('prevStageBtn').disabled = index === 0;
+      const canGoNext = index < STAGES.length - 1 && (clearedStages[index] || clearedStages[index + 1]);
+      document.getElementById('skipStageBtn').disabled = !canGoNext;
+
+      renderStageScene(index);
+      renderStageDots();
+    }
+
+    function selectChoiceChip(choiceText) {
+      if (clearedStages[currentStageIndex]) return;
+      sfxClick();
+      const input = document.getElementById('answerInput');
+      const cleanChoice = choiceText.replace(/\s*\(.*?\)\s*/g, '').trim();
+      input.value = cleanChoice;
+      input.focus();
+    }
+
+    function inspectClue(iconKey, speaker, text) {
+      sfxClue();
+      document.getElementById('clueIcon').innerHTML = pixelIcon(iconKey, 28);
+      document.getElementById('clueSpeaker').textContent = speaker;
+      document.getElementById('clueText').textContent = text;
+    }
+
+    function toggleSimSwitch(stageIdx) {
+      sfxClick();
+      simToggleState[stageIdx] = !simToggleState[stageIdx];
+      renderStageScene(stageIdx);
+    }
+
+    // =========================================================================
+    // 스테이지별 인터랙티브 씬 렌더러 (Stage 1 ~ 7)
+    // =========================================================================
+    function renderStageScene(index) {
+      const viewport = document.getElementById('sceneViewport');
+      const simCtrl = document.getElementById('simulatorControlArea');
+      const isCleared = clearedStages[index];
+      const simOn = simToggleState[index];
+      const ko = currentLang === 'ko';
+
+      // STAGE 1: 도서관 문손잡이
+      if (index === 0) {
+        const showLever = isCleared || simOn;
+        simCtrl.innerHTML = `
+          <button type="button" onclick="toggleSimSwitch(0)" class="btn-retro px-3 py-1 text-xs sm:text-sm font-bold ${
+            showLever ? 'bg-emerald-500 text-slate-950 border-slate-950' : 'bg-slate-800 text-amber-300 border-amber-400'
+          }">
+            ${showLever
+              ? (ko ? '🔧 손잡이 비교: 레버형 손잡이 적용됨' : '🔧 Handle Switch: Lever Handle Applied')
+              : (ko ? '🔧 손잡이 작동 원리 비교 스위치' : '🔧 Compare Handle Mechanism Switch')}
+          </button>
+        `;
+
+        viewport.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 z-10">
+            <span class="scene-badge text-xs sm:text-sm inline-flex items-center gap-1.5">${pixelIcon('🏛️', 16)}<span>${ko ? '시립 도서관 주 출입구' : 'City Library Main Entrance'}</span></span>
+            <span class="scene-badge text-xs sm:text-sm ${showLever ? 'text-emerald-300 border-emerald-400' : 'text-amber-300 border-amber-400'}">
+              ${showLever
+                ? (ko ? '현재 상태: 팔꿈치로도 열리는 레버형 손잡이' : 'Status: Elbow-Friendly Lever Handle')
+                : (ko ? '현재 상태: 쥐고 비틀어야 하는 둥근 손잡이' : 'Status: Round Knob Requiring Grip & Twist')}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 my-3 items-stretch z-10">
+            <div class="sm:col-span-7 grid grid-cols-3 gap-2">
+              <button type="button" onclick="inspectClueById('s1_student')" class="clue-card bg-slate-900 p-2.5 flex flex-col items-center justify-between text-center">
+                <div>${pixelIcon('📚', 34)}</div>
+                <div class="text-xs sm:text-sm font-bold text-white mt-1">${ko ? '대학생' : 'Student'}</div>
+                <div class="text-xs font-semibold ${showLever ? 'text-emerald-300' : 'text-rose-300'} inline-flex items-center gap-1 mt-1">
+                  ${showLever ? `${pixelIcon('😊', 14)}<span>${ko ? '팔꿈치로 열림!' : 'Elbow Open!'}</span>` : `${pixelIcon('😣', 14)}<span>${ko ? '양손에 책 가득' : 'Hands Full'}</span>`}
+                </div>
+              </button>
+
+              <button type="button" onclick="inspectClueById('s1_senior')" class="clue-card bg-slate-900 p-2.5 flex flex-col items-center justify-between text-center">
+                <div>${pixelIcon('👵', 34)}</div>
+                <div class="text-xs sm:text-sm font-bold text-white mt-1">${ko ? '어르신' : 'Senior'}</div>
+                <div class="text-xs font-semibold ${showLever ? 'text-emerald-300' : 'text-rose-300'} inline-flex items-center gap-1 mt-1">
+                  ${showLever ? `${pixelIcon('😊', 14)}<span>${ko ? '가볍게 열림!' : 'Easy Push!'}</span>` : `${pixelIcon('😣', 14)}<span>${ko ? '손목 관절 통증' : 'Wrist Pain'}</span>`}
+                </div>
+              </button>
+
+              <button type="button" onclick="inspectClueById('s1_child')" class="clue-card bg-slate-900 p-2.5 flex flex-col items-center justify-between text-center">
+                <div>${pixelIcon('🧒', 34)}</div>
+                <div class="text-xs sm:text-sm font-bold text-white mt-1">${ko ? '어린이' : 'Child'}</div>
+                <div class="text-xs font-semibold ${showLever ? 'text-emerald-300' : 'text-rose-300'} inline-flex items-center gap-1 mt-1">
+                  ${showLever ? `${pixelIcon('😊', 14)}<span>${ko ? '눌러서 열림!' : 'Pressed Down!'}</span>` : `${pixelIcon('😣', 14)}<span>${ko ? '젖은 손 미끄러짐' : 'Slippery Hand'}</span>`}
+                </div>
+              </button>
+            </div>
+
+            <button type="button" onclick="inspectClueById('${showLever ? 's1_door_good' : 's1_door_bad'}')" class="sm:col-span-5 clue-card bg-slate-900 p-3 flex flex-col items-center justify-between border-2 ${showLever ? 'border-emerald-400' : 'border-amber-400'}">
+              <div class="text-xs font-bold text-slate-200">${ko ? '도서관 강화유리문 (단서 클릭)' : 'Library Glass Door (Click Clue)'}</div>
+
+              <div class="my-2 flex items-center justify-center">
+                ${
+                  showLever
+                    ? `<div class="relative w-32 h-20 bg-slate-950 border-2 border-emerald-400 flex items-center justify-center">
+                         <div class="w-5 h-5 bg-amber-300 border-2 border-slate-950"></div>
+                         <div class="w-16 h-4 bg-gradient-to-r from-amber-300 to-emerald-400 border-2 border-slate-950 -ml-1 shadow-md"></div>
+                         <span class="absolute bottom-1 right-1.5 text-xs font-black text-emerald-300">${ko ? '↓ 누름' : '↓ PRESS'}</span>
+                       </div>`
+                    : `<div class="relative w-24 h-20 bg-slate-950 border-2 border-amber-400 flex items-center justify-center">
+                         <div class="w-12 h-12 bg-gradient-to-br from-amber-300 to-amber-600 border-4 border-slate-950 shadow-lg flex items-center justify-center">
+                           <div class="w-3 h-3 bg-amber-950"></div>
+                         </div>
+                         <span class="absolute bottom-1 right-1 text-xs font-black text-rose-300">${ko ? '↻ 비틀기' : '↻ TWIST'}</span>
+                       </div>`
+                }
+              </div>
+
+              <div class="w-full py-1 px-2 text-center text-xs font-extrabold ${showLever ? 'bg-emerald-950 text-emerald-200 border border-emerald-400' : 'bg-rose-950 text-rose-200 border border-rose-400'}">
+                ${showLever
+                  ? (ko ? '[ 가볍게 눌러서 여세요 ]' : '[ Press Down to Open ]')
+                  : (ko ? '[ 손잡이를 쥐고 돌려서 여세요 ]' : '[ Grip & Twist Knob to Open ]')}
+              </div>
+            </button>
+          </div>
+
+          <div class="text-xs sm:text-sm text-slate-200 bg-slate-900/90 px-3 py-1.5 border-2 border-slate-700 flex items-center justify-between z-10">
+            <span>${ko ? '💡 단서 요약: 손아귀 힘과 손목 회전이 없는 손잡이는?' : '💡 Clue Summary: Which handle needs no grip or wrist twist?'}</span>
+            <span class="text-amber-300 font-bold">${ko ? '우측 문손잡이 클릭!' : 'Click the door handle!'}</span>
+          </div>
+        `;
+      }
+
+      // STAGE 2: 무인 카페 키오스크
+      else if (index === 1) {
+        const lowScreenActive = isCleared;
+        const lowEyeSim = simOn && !isCleared;
+
+        simCtrl.innerHTML = `
+          <button type="button" onclick="toggleSimSwitch(1)" class="btn-retro px-3 py-1 text-xs sm:text-sm font-bold ${
+            lowEyeSim ? 'bg-amber-400 text-slate-950 border-slate-950' : 'bg-slate-800 text-sky-300 border-sky-400'
+          }">
+            ${lowEyeSim
+              ? (ko ? '📐 시야 높이 체험 스위치: 110cm 시야 적용 중' : '📐 Eye-Level Simulation Switch: 110cm Active')
+              : (ko ? '📐 시야 높이 체험 스위치 (170cm vs 110cm)' : '📐 Eye-Level Simulation Switch (170cm vs 110cm)')}
+          </button>
+        `;
+
+        viewport.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 z-10">
+            <span class="scene-badge text-xs sm:text-sm inline-flex items-center gap-1.5">${pixelIcon('☕', 16)}<span>${ko ? '무인 스마트 카페 키오스크' : 'Self-Service Cafe Kiosk'}</span></span>
+            <span class="scene-badge text-xs sm:text-sm ${lowScreenActive ? 'text-emerald-300 border-emerald-400' : 'text-amber-300 border-amber-400'}">
+              ${lowScreenActive
+                ? (ko ? '낮은 화면 모드 ON (조작부 하단 이동)' : 'Low Screen Mode ON (Controls Lowered)')
+                : lowEyeSim
+                ? (ko ? '110cm 시야: 상단 메뉴 어둡고 손 안 닿음!' : '110cm View: Top Menu Dark & Out of Reach!')
+                : (ko ? '일반 화면: 상단 높이 165cm 배치' : 'Standard Mode: Top Menu at 165cm')}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 my-3 items-stretch z-10">
+            <div class="sm:col-span-5 flex flex-col justify-between gap-2">
+              <button type="button" onclick="inspectClueById('s2_worker')" class="clue-card bg-slate-900 p-3 flex items-center gap-3">
+                <div>${pixelIcon('♿', 34)}</div>
+                <div>
+                  <div class="text-sm font-bold text-white">${ko ? '휠체어 이용 직장인' : 'Wheelchair User'}</div>
+                  <div class="text-xs font-semibold ${lowScreenActive ? 'text-emerald-300' : 'text-rose-300'} mt-0.5 inline-flex items-center gap-1">
+                    ${lowScreenActive ? `${pixelIcon('😊', 14)}<span>${ko ? '편안한 눈높이 주문!' : 'Comfortable Reach!'}</span>` : `${pixelIcon('😣', 14)}<span>${ko ? '앉은 눈높이 110cm (상단 안 닿음)' : 'Seated Eye Level 110cm'}</span>`}
+                  </div>
+                </div>
+              </button>
+
+              <button type="button" onclick="inspectClueById('s2_kid')" class="clue-card bg-slate-900 p-3 flex items-center gap-3">
+                <div>${pixelIcon('🧒', 34)}</div>
+                <div>
+                  <div class="text-sm font-bold text-white">${ko ? '초등학생 (키 122cm)' : 'Child (Height 122cm)'}</div>
+                  <div class="text-xs font-semibold ${lowScreenActive ? 'text-emerald-300' : 'text-rose-300'} mt-0.5 inline-flex items-center gap-1">
+                    ${lowScreenActive ? `${pixelIcon('😊', 14)}<span>${ko ? '아래쪽 메뉴 터치 성공!' : 'Lower Menu Reached!'}</span>` : `${pixelIcon('😣', 14)}<span>${ko ? '까치발을 들어도 터치 불가' : 'Out of Reach on Tiptoes'}</span>`}
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            <div class="sm:col-span-7 bg-slate-900 border-2 border-slate-500 p-3 flex flex-col justify-between relative">
+              <div class="text-xs font-extrabold text-center text-slate-200 pb-1 border-b-2 border-slate-700">
+                SMART CAFE KIOSK (H: 175cm)
+              </div>
+
+              <!-- 상단 영역 -->
+              <button type="button" onclick="inspectClueById('s2_topmenu')" class="clue-card my-1.5 p-2.5 border-2 transition ${
+                lowScreenActive
+                  ? 'bg-slate-950 border-slate-700 text-slate-300'
+                  : lowEyeSim
+                  ? 'bg-slate-950 opacity-35 border-rose-500'
+                  : 'bg-sky-950 border-sky-400'
+              }">
+                ${
+                  lowScreenActive
+                    ? `<div class="text-center text-xs font-bold py-1 text-slate-300">${ko ? '[ 상단 안내 배너 영역 (높이 165cm) ]' : '[ Upper Info Banner Area (165cm) ]'}</div>`
+                    : `<div class="flex justify-between items-center text-xs font-extrabold text-amber-300 mb-1">
+                         <span>${ko ? '[추천 메뉴 탭] (높이 165cm)' : '[Top Menu Tab] (165cm)'}</span>
+                         <span>${ko ? '[장바구니/결제]' : '[Cart / Pay]'}</span>
+                       </div>
+                       <div class="grid grid-cols-3 gap-1.5 text-center text-xs font-bold">
+                         <span class="bg-slate-900 py-1 border border-slate-600 text-white">${ko ? '아메리카노' : 'Americano'}</span>
+                         <span class="bg-slate-900 py-1 border border-slate-600 text-white">${ko ? '카페라떼' : 'Cafe Latte'}</span>
+                         <span class="bg-slate-900 py-1 border border-slate-600 text-white">${ko ? '핫초코' : 'Hot Cocoa'}</span>
+                       </div>
+                       ${lowEyeSim ? `<div class="mt-1 text-center text-xs font-black text-rose-300">${ko ? '⚠️ 시야각 어두움 & 손이 닿지 않음' : '⚠️ Dark Viewing Angle & Out of Reach'}</div>` : ''}`
+                }
+              </button>
+
+              <!-- 하단 영역 -->
+              <div class="p-2.5 border-2 ${lowScreenActive ? 'bg-emerald-950/90 border-emerald-400' : 'bg-slate-950 border-slate-700'} flex flex-col justify-between">
+                ${
+                  lowScreenActive
+                    ? `<div class="text-xs font-black text-emerald-300 mb-1 flex justify-between">
+                         <span>${ko ? '✓ [낮은 화면 모드 작동 중 (높이 95cm)]' : '✓ [Low Screen Mode Active (95cm)]'}</span>
+                         <span>${ko ? '[장바구니/결제]' : '[Cart / Pay]'}</span>
+                       </div>
+                       <div class="grid grid-cols-3 gap-1.5 text-center text-xs font-bold mb-1.5">
+                         <span class="bg-slate-900 py-1 border border-emerald-400 text-white">${ko ? '아메리카노' : 'Americano'}</span>
+                         <span class="bg-slate-900 py-1 border border-emerald-400 text-white">${ko ? '카페라떼' : 'Cafe Latte'}</span>
+                         <span class="bg-slate-900 py-1 border border-emerald-400 text-white">${ko ? '핫초코' : 'Hot Cocoa'}</span>
+                       </div>`
+                    : `<div class="text-xs text-slate-300 text-center py-1">${ko ? '[ 하단 빈 광고 배너 영역 (높이 95cm) ]' : '[ Lower Empty Ad Banner Area (95cm) ]'}</div>`
+                }
+
+                <div class="flex items-center justify-between pt-1 border-t border-slate-800">
+                  <span class="text-xs text-slate-300">${ko ? '카드 투입구 💳' : 'Card Slot 💳'}</span>
+                  <button
+                    type="button"
+                    onclick="inspectClueById('s2_lowbtn')"
+                    class="px-2.5 py-1 text-xs font-black border-2 transition ${
+                      lowScreenActive
+                        ? 'bg-emerald-400 text-slate-950 border-slate-950'
+                        : 'bg-slate-800 text-amber-300 border-amber-400 hover:bg-amber-400 hover:text-slate-950'
+                    }"
+                  >
+                    ${ko ? '♿ [낮은 화면] (단서 클릭)' : '♿ [Low Screen Mode] (Click Clue)'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-xs sm:text-sm text-slate-200 bg-slate-900/90 px-3 py-1.5 border-2 border-slate-700 flex items-center justify-between z-10">
+            <span>${ko ? '💡 키오스크 우측 하단의 작은 버튼을 클릭해 조사해 보세요!' : '💡 Click the button at the bottom-right of the kiosk!'}</span>
+            <span class="text-amber-300 font-bold">${ko ? '[낮은 화면] 주목' : 'Check [Low Screen Mode]'}</span>
+          </div>
+        `;
+      }
+
+      // STAGE 3: 지하 쇼핑몰 비상벨
+      else if (index === 2) {
+        const strobeInstalled = isCleared;
+        const muteAudioSim = simOn;
+
+        simCtrl.innerHTML = `
+          <button type="button" onclick="toggleSimSwitch(2)" class="btn-retro px-3 py-1 text-xs sm:text-sm font-bold ${
+            muteAudioSim ? 'bg-rose-500 text-white border-white' : 'bg-slate-800 text-sky-300 border-sky-400'
+          }">
+            ${muteAudioSim
+              ? (ko ? '🔇 청각 차단 시뮬레이션 ON (소리 안 들림)' : '🔇 Deaf / Earphone Simulation ON (Muted)')
+              : (ko ? '🔊 청각 차단 시뮬레이션 스위치 (이어폰/청각장애 시점)' : '🔊 Toggle Deaf / Earphone Simulation Switch')}
+          </button>
+        `;
+
+        viewport.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 z-10">
+            <span class="scene-badge text-xs sm:text-sm inline-flex items-center gap-1.5">${pixelIcon('🚨', 16)}<span>${ko ? '지하 쇼핑몰 중앙 휴게실 (화재 발생!)' : 'Underground Mall Lounge (Fire Emergency!)'}</span></span>
+            <span class="scene-badge text-xs sm:text-sm ${strobeInstalled ? 'text-emerald-300 border-emerald-400' : 'text-rose-300 border-rose-400'}">
+              ${strobeInstalled
+                ? (ko ? '청각 사이렌 + 시각 경광등 동시 작동!' : 'Audio Siren + Visual Strobe Active!')
+                : muteAudioSim
+                ? (ko ? '소리가 들리지 않아 경보를 전혀 알 수 없음!' : 'Sound Muted: Zero Emergency Awareness!')
+                : (ko ? '현재 소리(사이렌)만 울리는 중' : 'Currently Sound-Only Siren')}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 my-3 items-stretch z-10">
+            <!-- 좌측 기둥 화재경보기 -->
+            <div class="sm:col-span-5 bg-slate-900 border-2 border-slate-600 p-3 flex flex-col items-center justify-between">
+              <div class="text-xs font-bold text-slate-200">${ko ? '벽면 비상경보 설비 (단서 클릭)' : 'Wall Fire Alarm Unit (Click Clue)'}</div>
+
+              <button
+                type="button"
+                onclick="inspectClueById('${strobeInstalled ? 's3_alarm_good' : 's3_alarm_bad'}')"
+                class="clue-card w-full py-2.5 px-3 my-1 border-2 text-center ${
+                  strobeInstalled
+                    ? 'strobe-active text-white border-white'
+                    : 'bg-slate-950 border-amber-400 text-amber-300'
+                }"
+              >
+                <div class="text-sm sm:text-base font-black">
+                  ${strobeInstalled
+                    ? (ko ? '⚡ [ 경광등 / 시각경보기 번쩍임! ] ⚡' : '⚡ [ STROBE LIGHT FLASHING! ] ⚡')
+                    : (ko ? '[  ?  ] (빈 브래킷 클릭)' : '[  ?  ] (Click Empty Bracket)')}
+                </div>
+                <div class="text-xs mt-0.5 font-semibold">
+                  ${strobeInstalled
+                    ? (ko ? '고휘도 LED 점멸 신호 출력 중' : 'High-Intensity Strobe Active')
+                    : (ko ? '시각 신호 장치 누락됨' : 'Visual Signal Device Missing')}
+                </div>
+              </button>
+
+              <div class="w-full bg-slate-950 border-2 border-rose-500 p-2.5 flex items-center justify-center gap-3">
+                <div class="w-10 h-10 bg-rose-600 border-2 border-rose-200 flex items-center justify-center">
+                  ${pixelIcon('🔊', 22)}
+                </div>
+                <div class="text-left">
+                  <div class="text-xs font-black text-rose-300">${ko ? '화재 사이렌 벨' : 'Fire Siren Bell'}</div>
+                  <div class="text-xs text-slate-200">
+                    ${muteAudioSim
+                      ? (ko ? '🔇 (청각 차단 상태: 무음)' : '🔇 (Audio Muted: Silent)')
+                      : (ko ? '))) 삐오삐오! 100dB' : '))) SIREN! 100dB')}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 우측 벤치 시민들 -->
+            <div class="sm:col-span-7 flex flex-col justify-between gap-2">
+              <button type="button" onclick="inspectClueById('s3_youth')" class="clue-card bg-slate-900 p-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div>${pixelIcon('🎧', 34)}</div>
+                  <div>
+                    <div class="text-sm font-bold text-white">${ko ? '이어폰을 낀 청년' : 'Youth with Earphones'}</div>
+                    <div class="text-xs text-slate-200">${ko ? '노이즈캔슬링 음악 감상 중' : 'Listening with Noise-Canceling'}</div>
+                  </div>
+                </div>
+                <span class="px-2.5 py-1 text-xs font-black border ${
+                  strobeInstalled ? 'bg-emerald-950 text-emerald-300 border-emerald-400' : 'bg-rose-950 text-rose-200 border-rose-500'
+                }">
+                  ${strobeInstalled
+                    ? (ko ? '⚡ 불빛 보고 즉시 대피!' : '⚡ Saw Strobe & Evacuated!')
+                    : (ko ? '❓ 사이렌 못 들음' : '❓ Cannot Hear Siren')}
+                </span>
+              </button>
+
+              <button type="button" onclick="inspectClueById('s3_traveler')" class="clue-card bg-slate-900 p-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div>${pixelIcon('🧳', 34)}</div>
+                  <div>
+                    <div class="text-sm font-bold text-white">${ko ? '청각장애인 여행객' : 'Deaf Traveler'}</div>
+                    <div class="text-xs text-slate-200">${ko ? '음성 안내방송 인지 불가' : 'Cannot Hear Voice PA'}</div>
+                  </div>
+                </div>
+                <span class="px-2.5 py-1 text-xs font-black border ${
+                  strobeInstalled ? 'bg-emerald-950 text-emerald-300 border-emerald-400' : 'bg-rose-950 text-rose-200 border-rose-500'
+                }">
+                  ${strobeInstalled
+                    ? (ko ? '⚡ 경광등 보고 즉시 대피!' : '⚡ Saw Strobe & Evacuated!')
+                    : (ko ? '❓ 위험 상황 모름' : '❓ Unaware of Danger')}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="text-xs sm:text-sm text-slate-200 bg-slate-900/90 px-3 py-1.5 border-2 border-slate-700 flex items-center justify-between z-10">
+            <span>${ko ? '💡 경보기 위쪽의 [ ? ] 박스를 클릭해 어떤 장치가 빠졌는지 확인하세요!' : '💡 Click the [ ? ] bracket above the bell to see what is missing!'}</span>
+            <span class="text-amber-300 font-bold">${ko ? '청각 + 시각 동시 전달' : 'Audible + Visual Alert'}</span>
+          </div>
+        `;
+      }
+
+      // STAGE 4: 지하철 개찰구 (제7원칙: 충분한 공간)
+      else if (index === 3) {
+        const wideGate = isCleared || simOn;
+
+        simCtrl.innerHTML = `
+          <button type="button" onclick="toggleSimSwitch(3)" class="btn-retro px-3 py-1 text-xs sm:text-sm font-bold ${
+            wideGate ? 'bg-emerald-500 text-slate-950 border-slate-950' : 'bg-slate-800 text-amber-300 border-amber-400'
+          }">
+            ${wideGate
+              ? (ko ? '📏 개찰구 폭 비교: 90cm 넓은 통로 적용됨' : '📏 Gate Width Switch: 90cm Wide Gate Applied')
+              : (ko ? '📏 개찰구 폭 비교 스위치 (45cm vs 90cm)' : '📏 Compare Gate Width Switch (45cm vs 90cm)')}
+          </button>
+        `;
+
+        viewport.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 z-10">
+            <span class="scene-badge text-xs sm:text-sm inline-flex items-center gap-1.5">${pixelIcon('🚇', 16)}<span>${ko ? '지하철역 개찰구 게이트' : 'Subway Station Turnstile Gate'}</span></span>
+            <span class="scene-badge text-xs sm:text-sm ${wideGate ? 'text-emerald-300 border-emerald-400' : 'text-rose-300 border-rose-400'}">
+              ${wideGate
+                ? (ko ? '현재 폭: 90cm 광폭 자동 개찰구 (모두 통과)' : 'Current Width: 90cm Wide Flap Gate (All Pass)')
+                : (ko ? '현재 폭: 45cm 삼발이 회전 개찰구 (진입 불가)' : 'Current Width: 45cm Tripod Turnstile (Blocked)')}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 my-3 items-stretch z-10">
+            <!-- 좌측 승객 3명 -->
+            <div class="sm:col-span-7 grid grid-cols-3 gap-2">
+              <button type="button" onclick="inspectClueById('s4_wheelchair')" class="clue-card bg-slate-900 p-2.5 flex flex-col items-center justify-between text-center">
+                <div>${pixelIcon('♿', 34)}</div>
+                <div class="text-xs sm:text-sm font-bold text-white mt-1">${ko ? '휠체어 (폭 70cm)' : 'Wheelchair (70cm)'}</div>
+                <div class="text-xs font-semibold ${wideGate ? 'text-emerald-300' : 'text-rose-300'} inline-flex items-center gap-1 mt-1">
+                  ${wideGate ? `${pixelIcon('😊', 14)}<span>${ko ? '스스로 통과!' : 'Passed!'}</span>` : `${pixelIcon('😣', 14)}<span>${ko ? '폭 좁아 막힘' : 'Too Narrow'}</span>`}
+                </div>
+              </button>
+
+              <button type="button" onclick="inspectClueById('s4_stroller')" class="clue-card bg-slate-900 p-2.5 flex flex-col items-center justify-between text-center">
+                <div>${pixelIcon('👶', 34)}</div>
+                <div class="text-xs sm:text-sm font-bold text-white mt-1">${ko ? '유모차 가족' : 'Stroller'}</div>
+                <div class="text-xs font-semibold ${wideGate ? 'text-emerald-300' : 'text-rose-300'} inline-flex items-center gap-1 mt-1">
+                  ${wideGate ? `${pixelIcon('😊', 14)}<span>${ko ? '안전 통과!' : 'Smooth Pass!'}</span>` : `${pixelIcon('😣', 14)}<span>${ko ? '삼발이에 걸림' : 'Bars Block'}</span>`}
+                </div>
+              </button>
+
+              <button type="button" onclick="inspectClueById('s4_luggage')" class="clue-card bg-slate-900 p-2.5 flex flex-col items-center justify-between text-center">
+                <div>${pixelIcon('🧳', 34)}</div>
+                <div class="text-xs sm:text-sm font-bold text-white mt-1">${ko ? '대형 캐리어' : 'Large Suitcase'}</div>
+                <div class="text-xs font-semibold ${wideGate ? 'text-emerald-300' : 'text-rose-300'} inline-flex items-center gap-1 mt-1">
+                  ${wideGate ? `${pixelIcon('😊', 14)}<span>${ko ? '막힘없이 통과!' : 'Easy Pass!'}</span>` : `${pixelIcon('😣', 14)}<span>${ko ? '가방 끼임' : 'Bag Jammed'}</span>`}
+                </div>
+              </button>
+            </div>
+
+            <!-- 우측 개찰구 게이트 비교 -->
+            <button type="button" onclick="inspectClueById('${wideGate ? 's4_gate_good' : 's4_gate_bad'}')" class="sm:col-span-5 clue-card bg-slate-900 p-3 flex flex-col items-center justify-between border-2 ${wideGate ? 'border-emerald-400' : 'border-rose-400'}">
+              <div class="text-xs font-bold text-slate-200">${ko ? '지하철 개찰구 설비 (단서 클릭)' : 'Subway Gate Unit (Click Clue)'}</div>
+
+              <div class="my-2 w-full flex items-center justify-center">
+                ${
+                  wideGate
+                    ? `<div class="w-full py-3 px-2 bg-slate-950 border-2 border-emerald-400 flex items-center justify-between">
+                         <div class="w-4 h-14 bg-emerald-400 border border-slate-950"></div>
+                         <div class="flex-1 text-center">
+                           <div class="text-xs font-black text-emerald-300">◀ 90cm WIDE ▶</div>
+                           <div class="text-xs text-white font-bold mt-0.5">${ko ? '플랩 자동문 개방' : 'Flap Doors Open'}</div>
+                         </div>
+                         <div class="w-4 h-14 bg-emerald-400 border border-slate-950"></div>
+                       </div>`
+                    : `<div class="w-full py-3 px-2 bg-slate-950 border-2 border-rose-400 flex items-center justify-center gap-2">
+                         <div class="w-5 h-14 bg-slate-600 border border-slate-400"></div>
+                         <div class="text-center">
+                           <div class="text-xs font-black text-rose-300">◀ 45cm ▶</div>
+                           <div class="text-xs text-amber-300 font-extrabold mt-0.5">${ko ? '┼─ 삼발이 쇠막대' : '┼─ Tripod Bars'}</div>
+                         </div>
+                         <div class="w-5 h-14 bg-slate-600 border border-slate-400"></div>
+                       </div>`
+                }
+              </div>
+
+              <div class="w-full py-1 px-2 text-center text-xs font-extrabold ${wideGate ? 'bg-emerald-950 text-emerald-200 border border-emerald-400' : 'bg-rose-950 text-rose-200 border border-rose-400'}">
+                ${wideGate
+                  ? (ko ? '[ 넓은 통로 (광폭 개찰구) 설치됨 ]' : '[ Wide Accessible Gate Installed ]')
+                  : (ko ? '[ 좁은 삼발이 개찰구 — 진입 불가 ]' : '[ Narrow Tripod Gate — Blocked ]')}
+              </div>
+            </button>
+          </div>
+
+          <div class="text-xs sm:text-sm text-slate-200 bg-slate-900/90 px-3 py-1.5 border-2 border-slate-700 flex items-center justify-between z-10">
+            <span>${ko ? '💡 휠체어·유모차·캐리어가 역무원 도움 없이 스스로 통과하려면?' : '💡 How can wheelchairs, strollers & luggage pass independently?'}</span>
+            <span class="text-amber-300 font-bold">${ko ? '개찰구 단서 클릭!' : 'Click the gate clue!'}</span>
+          </div>
+        `;
+      }
+
+      // STAGE 5: 지하철 환승역 유도선 (제3원칙: 직관적 사용)
+      else if (index === 4) {
+        const symbolsAdded = isCleared;
+        const cvdFilterOn = simOn;
+
+        simCtrl.innerHTML = `
+          <button type="button" onclick="toggleSimSwitch(4)" class="btn-retro px-3 py-1 text-xs sm:text-sm font-bold ${
+            cvdFilterOn ? 'bg-amber-400 text-slate-950 border-slate-950' : 'bg-slate-800 text-sky-300 border-sky-400'
+          }">
+            ${cvdFilterOn
+              ? (ko ? '👁️ 적녹색약 시야 필터 ON (초록·빨강 혼동)' : '👁️ Red-Green CVD Filter ON (Green/Red Confused)')
+              : (ko ? '🎨 일반 컬러 시야 (필터 OFF)' : '🎨 Normal Color Vision (Filter OFF)')}
+          </button>
+        `;
+
+        const line1Bar = cvdFilterOn ? 'bg-[#94843a]' : 'bg-emerald-500';
+        const line2Bar = cvdFilterOn ? 'bg-[#8c7a36]' : 'bg-rose-500';
+        const line3Bar = cvdFilterOn ? 'bg-[#2563eb]' : 'bg-sky-500';
+
+        viewport.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 z-10">
+            <span class="scene-badge text-xs sm:text-sm inline-flex items-center gap-1.5">${pixelIcon('🚇', 16)}<span>${ko ? '지하철 환승 통로 바닥 유도선' : 'Subway Transfer Floor Guide Lines'}</span></span>
+            <span class="scene-badge text-xs sm:text-sm ${symbolsAdded ? 'text-emerald-300 border-emerald-400' : 'text-amber-300 border-amber-400'}">
+              ${symbolsAdded
+                ? (ko ? '색상 + 도형 기호·번호·패턴 병기 완료!' : 'Color + Shapes, Numbers & Patterns Added!')
+                : cvdFilterOn
+                ? (ko ? '적녹색약 시야: 초록(A)과 빨강(B)이 같아 보임!' : 'Red-Green CVD: Green (A) & Red (B) Look Identical!')
+                : (ko ? '일반 시야: 색상으로만 구분된 유도선' : 'Normal View: Lines Distinguished Only by Color')}
+            </span>
+          </div>
+
+          <div class="my-3 space-y-2.5 z-10">
+            <button type="button" onclick="inspectClueById('s5_sign')" class="clue-card w-full bg-slate-900 p-2.5 text-left flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs sm:text-sm font-extrabold text-amber-300 inline-flex items-center gap-1.5">
+                ${pixelIcon('📋', 16)}<span>${ko ? '벽면 안내판 (클릭): “초록색 선 = 2호선 / 빨간색 선 = 신분당선 / 파란색 선 = 4호선”' : 'Wall Sign (Click): “Green = Line 2 / Red = Shinbundang / Blue = Line 4”'}</span>
+              </span>
+              <span class="text-xs text-slate-300">${ko ? '색상만 안내됨' : 'Color-only instructions'}</span>
+            </button>
+
+            <div class="bg-slate-900 border-2 border-slate-600 p-3 space-y-2.5">
+              <!-- 유도선 A -->
+              <button type="button" onclick="inspectClueById('${symbolsAdded ? 's5_line_a_good' : 's5_line_a_bad'}')" class="clue-card w-full bg-slate-950 p-2 flex items-center gap-3">
+                <span class="text-xs font-bold text-slate-200 w-16 shrink-0">${ko ? '유도선 A' : 'Line A'}</span>
+                <div class="hc-keep-bg flex-1 h-5 ${line1Bar} flex items-center justify-around text-xs font-black text-white px-2">
+                  ${symbolsAdded ? (ko ? '<span>● 2호선</span><span>● 2호선</span><span>● Line 2</span>' : '<span>● Line 2</span><span>● Line 2</span><span>● Circle</span>') : ''}
+                </div>
+                <span class="px-2.5 py-0.5 bg-slate-900 border border-slate-500 text-xs font-black text-white min-w-[78px] text-center">
+                  ${symbolsAdded ? (ko ? '● [2호선]' : '● [Line 2]') : '[  ?  ]'}
+                </span>
+              </button>
+
+              <!-- 유도선 B -->
+              <button type="button" onclick="inspectClueById('${symbolsAdded ? 's5_line_b_good' : 's5_line_b_bad'}')" class="clue-card w-full bg-slate-950 p-2 flex items-center gap-3">
+                <span class="text-xs font-bold text-slate-200 w-16 shrink-0">${ko ? '유도선 B' : 'Line B'}</span>
+                <div class="hc-keep-bg flex-1 h-5 ${line2Bar} ${symbolsAdded ? 'border-y-2 border-dashed border-white' : ''} flex items-center justify-around text-xs font-black text-white px-2">
+                  ${symbolsAdded ? (ko ? '<span>◆ 신분당</span><span>◆ DX</span><span>◆ 신분당</span>' : '<span>◆ DX Line</span><span>◆ Diamond</span><span>◆ DX</span>') : ''}
+                </div>
+                <span class="px-2.5 py-0.5 bg-slate-900 border border-slate-500 text-xs font-black text-white min-w-[78px] text-center">
+                  ${symbolsAdded ? (ko ? '◆ [DX신분당]' : '◆ [DX Line]') : '[  ?  ]'}
+                </span>
+              </button>
+
+              <!-- 유도선 C -->
+              <button type="button" onclick="inspectClueById('${symbolsAdded ? 's5_line_c_good' : 's5_line_c_bad'}')" class="clue-card w-full bg-slate-950 p-2 flex items-center gap-3">
+                <span class="text-xs font-bold text-slate-200 w-16 shrink-0">${ko ? '유도선 C' : 'Line C'}</span>
+                <div class="hc-keep-bg flex-1 h-5 ${line3Bar} flex items-center justify-around text-xs font-black text-white px-2">
+                  ${symbolsAdded ? (ko ? '<span>■ 4호선</span><span>■ 4호선</span><span>■ Line 4</span>' : '<span>■ Line 4</span><span>■ Line 4</span><span>■ Square</span>') : ''}
+                </div>
+                <span class="px-2.5 py-0.5 bg-slate-900 border border-slate-500 text-xs font-black text-white min-w-[78px] text-center">
+                  ${symbolsAdded ? (ko ? '■ [4호선]' : '■ [Line 4]') : '[  ?  ]'}
+                </span>
+              </button>
+            </div>
+
+            <button type="button" onclick="inspectClueById('s5_citizens')" class="clue-card w-full bg-slate-900 p-2.5 flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div>${pixelIcon('👓', 24)}</div>
+                <span class="text-xs sm:text-sm font-bold text-white">${ko ? '적녹색약 시민 & 외국인 여행객 (클릭하여 대화 보기)' : 'Citizen with Red-Green CVD & Tourist (Click to Talk)'}</span>
+              </div>
+              <span class="text-xs font-extrabold ${symbolsAdded ? 'text-emerald-300' : 'text-rose-300'} inline-flex items-center gap-1">
+                ${symbolsAdded
+                  ? `${pixelIcon('😊', 14)}<span>${ko ? '도형·기호로 즉시 구별!' : 'Found Way with Symbols!'}</span>`
+                  : `${pixelIcon('🤔', 14)}<span>${ko ? 'A선과 B선이 같은 색으로 보임' : 'Line A & B Look Identical'}</span>`}
+              </span>
+            </button>
+          </div>
+        `;
+      }
+
+      // STAGE 6: 광장 횡단보도 보행섬 (제5원칙: 오류에 대한 포용력)
+      else if (index === 5) {
+        const islandInstalled = isCleared || simOn;
+
+        simCtrl.innerHTML = `
+          <button type="button" onclick="toggleSimSwitch(5)" class="btn-retro px-3 py-1 text-xs sm:text-sm font-bold ${
+            islandInstalled ? 'bg-emerald-500 text-slate-950 border-slate-950' : 'bg-slate-800 text-amber-300 border-amber-400'
+          }">
+            ${islandInstalled
+              ? (ko ? '🛡️ 중앙 안전 공간: 보행섬 설치됨' : '🛡️ Central Refuge: Pedestrian Island Installed')
+              : (ko ? '🛡️ 도로 중앙 보행섬 비교 스위치' : '🛡️ Compare Refuge Island Switch')}
+          </button>
+        `;
+
+        viewport.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 z-10">
+            <span class="scene-badge text-xs sm:text-sm inline-flex items-center gap-1.5">${pixelIcon('🚦', 16)}<span>${ko ? '시청 앞 왕복 8차선(32m) 광장 횡단보도' : '8-Lane (32m) Avenue Crosswalk'}</span></span>
+            <span class="scene-badge text-xs sm:text-sm ${islandInstalled ? 'text-emerald-300 border-emerald-400' : 'text-rose-300 border-rose-400'}">
+              ${islandInstalled
+                ? (ko ? '중앙 보행섬 설치: 중간에 안전하게 쉬어갈 수 있음!' : 'Refuge Island Active: Safe Mid-Crossing Wait!')
+                : (ko ? '보행 신호 종료 (적색불): 도로 한가운데 고립 위험!' : 'Signal Turned Red: Stranded in Center Lanes!')}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 my-3 items-stretch z-10">
+            <!-- 좌측: 4차선 도로 + 보행자 -->
+            <div class="sm:col-span-4 bg-slate-900 border-2 border-slate-600 p-2.5 flex flex-col justify-between">
+              <div class="text-xs font-bold text-slate-300">${ko ? '1~4차선 (건너온 길 16m)' : 'Lanes 1–4 (Crossed 16m)'}</div>
+              <div class="space-y-1.5 my-2">
+                <button type="button" onclick="inspectClueById('s6_senior')" class="clue-card w-full bg-slate-950 p-2 flex items-center gap-2">
+                  <div>${pixelIcon('👵', 26)}</div>
+                  <div>
+                    <div class="text-xs font-bold text-white">${ko ? '어르신 (보행 0.6m/s)' : 'Senior (0.6m/s)'}</div>
+                    <div class="text-xs ${islandInstalled ? 'text-emerald-300' : 'text-rose-300'} font-semibold">
+                      ${islandInstalled ? (ko ? '보행섬에서 안전 대기' : 'Safe on Island') : (ko ? '절반 건너다 신호 끊김!' : 'Stranded Halfway!')}
+                    </div>
+                  </div>
+                </button>
+                <button type="button" onclick="inspectClueById('s6_crutch')" class="clue-card w-full bg-slate-950 p-2 flex items-center gap-2">
+                  <div>${pixelIcon('🩼', 26)}</div>
+                  <div>
+                    <div class="text-xs font-bold text-white">${ko ? '목발짚은 청년' : 'Youth on Crutches'}</div>
+                    <div class="text-xs ${islandInstalled ? 'text-emerald-300' : 'text-rose-300'} font-semibold">
+                      ${islandInstalled ? (ko ? '쉬었다가 다음 신호 이동' : 'Rests for Next Signal') : (ko ? '차들 사이에 고립됨!' : 'Stuck Between Cars!')}
+                    </div>
+                  </div>
+                </button>
+              </div>
+              <div class="text-xs text-slate-300 text-center bg-slate-950 py-1 border border-slate-700 inline-flex items-center justify-center gap-1">${pixelIcon('🚗', 14)}<span>${ko ? '차량 통행 중' : 'Moving Traffic'}</span></div>
+            </div>
+
+            <!-- 중앙: 보행섬(교통섬) 영역 -->
+            <button type="button" onclick="inspectClueById('${islandInstalled ? 's6_island_good' : 's6_island_bad'}')" class="sm:col-span-4 clue-card p-3 flex flex-col items-center justify-between text-center border-2 ${
+              islandInstalled ? 'bg-emerald-950/90 border-emerald-400' : 'bg-rose-950/60 border-amber-400'
+            }">
+              <div class="text-xs font-black ${islandInstalled ? 'text-emerald-300' : 'text-amber-300'}">
+                ${islandInstalled
+                  ? (ko ? '🛡️ [ 보행섬 (중앙 대기 공간) ]' : '🛡️ [ Pedestrian Refuge Island ]')
+                  : (ko ? '⚠️ 도로 중앙선 [ ? ] (클릭)' : '⚠️ Road Center Line [ ? ] (Click)')}
+              </div>
+
+              <div class="my-2">
+                ${islandInstalled ? pixelIcon('🛡️', 36) : pixelIcon('🚗', 36)}
+              </div>
+
+              <p class="text-xs text-slate-100 leading-snug font-medium">
+                ${islandInstalled
+                  ? (ko ? '안전 볼라드와 턱낮춤 연석으로 보호되는 중앙 보행 안전지대!' : 'Protected central waiting haven with bollards & level entry!')
+                  : (ko ? '대기 공간이 없어 양방향 차량 사이에 보행자가 그대로 노출됩니다.' : 'No waiting space—pedestrians are exposed between fast lanes.')}
+              </p>
+            </button>
+
+            <!-- 우측: 5~8차선 + 신호등 -->
+            <div class="sm:col-span-4 bg-slate-900 border-2 border-slate-600 p-2.5 flex flex-col justify-between">
+              <div class="text-xs font-bold text-slate-300">${ko ? '5~8차선 (남은 길 16m)' : 'Lanes 5–8 (Remaining 16m)'}</div>
+
+              <button type="button" onclick="inspectClueById('s6_signal')" class="clue-card w-full bg-slate-950 p-2.5 my-2 text-center border border-rose-500">
+                <div class="flex justify-center mb-1">${pixelIcon('🚦', 28)}</div>
+                <div class="text-xs font-black text-rose-300">${ko ? '보행 신호: 적색 (정지)' : 'Signal: RED (Don\'t Walk)'}</div>
+                <div class="text-xs text-slate-200 mt-0.5">${ko ? '신호 기준(단서 클릭)' : 'Signal Timing (Click Clue)'}</div>
+              </button>
+
+              <div class="text-xs text-slate-300 text-center bg-slate-950 py-1 border border-slate-700">${ko ? '건너편 시청 광장 ▶' : 'To City Hall Plaza ▶'}</div>
+            </div>
+          </div>
+
+          <div class="text-xs sm:text-sm text-slate-200 bg-slate-900/90 px-3 py-1.5 border-2 border-slate-700 flex items-center justify-between z-10">
+            <span>${ko ? '💡 한 번에 다 건너지 못해도 안전하게 쉬어갈 수 있는 도로 중앙 공간은?' : '💡 What central space lets slow walkers wait safely mid-crossing?'}</span>
+            <span class="text-amber-300 font-bold">${ko ? '중앙 [ ? ] 클릭!' : 'Click Center [ ? ]!'}</span>
+          </div>
+        `;
+      }
+
+      // STAGE 7: 시청 본관 입구 (최종 보스 - 제1원칙: 공평한 사용)
+      else if (index === 6) {
+        const integratedEntrance = isCleared || simOn;
+
+        simCtrl.innerHTML = `
+          <button type="button" onclick="toggleSimSwitch(6)" class="btn-retro px-3 py-1 text-xs sm:text-sm font-bold ${
+            integratedEntrance ? 'bg-emerald-500 text-slate-950 border-slate-950' : 'bg-slate-800 text-amber-300 border-amber-400'
+          }">
+            ${integratedEntrance
+              ? (ko ? '🏛️ 설계 비교: 모두 함께 입장하는 통합 경사 광장' : '🏛️ Design Switch: Integrated Sloped Plaza for All')
+              : (ko ? '🏛️ 설계 비교: 분리된 입구 vs 통합 경사 광장' : '🏛️ Compare: Segregated vs Integrated Entrance')}
+          </button>
+        `;
+
+        if (integratedEntrance) {
+          viewport.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-2 z-10">
+              <span class="scene-badge text-xs sm:text-sm inline-flex items-center gap-1.5">${pixelIcon('🏛️', 16)}<span>${ko ? '시청 본관 정문 (유니버설디자인 리모델링)' : 'City Hall Main Entrance (UD Remodeled)'}</span></span>
+              <span class="scene-badge text-xs sm:text-sm text-emerald-300 border-emerald-400">
+                ${ko ? '모두가 같은 정문으로 함께 입장!' : 'Everyone Enters Together Through Main Plaza!'}
+              </span>
+            </div>
+
+            <button type="button" onclick="inspectClueById('s7_plaza')" class="clue-card my-3 bg-emerald-950/50 border-2 border-emerald-400 p-5 flex flex-col items-center justify-center text-center space-y-2 z-10">
+              <div class="flex items-center gap-3">
+                ${pixelIcon('🚶', 30)}
+                ${pixelIcon('♿', 30)}
+                ${pixelIcon('👶', 30)}
+                ${pixelIcon('👵', 30)}
+                ${pixelIcon('🧳', 30)}
+              </div>
+              <div class="text-base sm:text-lg font-black text-emerald-300">
+                ${ko ? '계단 없는 완만한 통합 경사 광장 (Integrated Sloped Plaza)' : 'Step-Free Integrated Sloped Plaza Main Entrance'}
+              </div>
+              <p class="text-xs sm:text-sm text-slate-100 max-w-lg">
+                ${ko
+                  ? '누구도 어두운 뒷문 화물용 승강기로 돌아가지 않습니다. 휠체어, 유모차, 어르신, 어린이, 비장애인 모두가 정문으로 당당하게 들어갑니다!'
+                  : 'Nobody is sent to a dark back-alley freight lift. Wheelchair users, strollers, seniors, children, and walking citizens all enter proudly together!'}
+              </p>
+            </button>
+
+            <div class="text-xs sm:text-sm text-slate-200 bg-slate-900/90 px-3 py-1.5 border-2 border-slate-700 flex items-center justify-between z-10">
+              <span>${ko ? '💡 이처럼 누구도 분리·차별하지 않고 동등하게 존중하는 UD 제1원칙은?' : '💡 What is the 1st Principle of UD that forbids segregating users?'}</span>
+              <span class="text-emerald-300 font-bold">${ko ? '정답 입력란에 입력해 보세요!' : 'Enter in the answer box!'}</span>
+            </div>
+          `;
+        } else {
+          viewport.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-2 z-10">
+              <span class="scene-badge text-xs sm:text-sm inline-flex items-center gap-1.5">${pixelIcon('🏛️', 16)}<span>${ko ? '시청 본관 입구 (감사관 0점 판정 현장)' : 'City Hall Entrance (Rated 0 Points by Inspector)'}</span></span>
+              <span class="scene-badge text-xs sm:text-sm text-rose-300 border-rose-400">
+                ${ko ? '정문 계단 vs 뒷문 화물용 승강기 분리' : 'Front Stairs vs Back Freight Lift Segregation'}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 my-3 items-stretch z-10">
+              <button type="button" onclick="inspectClueById('s7_stairs')" class="sm:col-span-5 clue-card bg-slate-900 p-3 flex flex-col justify-between border-2 border-sky-400">
+                <div class="text-xs font-extrabold text-sky-300">${ko ? '☀️ 시청 정문 (대리석 계단)' : '☀️ Front Entrance (Marble Stairs)'}</div>
+                <div class="my-2 space-y-1">
+                  <div class="h-2.5 bg-slate-400 w-full"></div>
+                  <div class="h-2.5 bg-slate-300 w-5/6 mx-auto"></div>
+                  <div class="h-2.5 bg-slate-200 w-4/6 mx-auto"></div>
+                  <div class="text-center pt-1">${pixelIcon('🏛️', 24)}</div>
+                </div>
+                <div class="text-xs text-slate-200 text-center">${ko ? '보행 시민들만 정문으로 입장' : 'Only walking citizens enter front'}</div>
+              </button>
+
+              <button type="button" onclick="inspectClueById('s7_sign')" class="sm:col-span-3 clue-card bg-amber-950/60 p-2.5 flex flex-col items-center justify-center text-center border-2 border-amber-400">
+                <div class="text-xs font-black text-amber-300 mb-1">${ko ? '안내 표지판 (클릭)' : 'Signpost (Click)'}</div>
+                <div class="bg-white text-slate-950 p-2 text-xs font-extrabold leading-snug border-2 border-slate-950">
+                  ${ko ? '휠체어·유모차는<br/>건물 뒤편<br/>화물용 승강기를<br/>이용하세요 ➔' : 'Wheelchairs &<br/>Strollers:<br/>Use Back Alley<br/>Freight Lift ➔'}
+                </div>
+              </button>
+
+              <button type="button" onclick="inspectClueById('s7_alley')" class="sm:col-span-4 clue-card bg-slate-950 p-3 flex flex-col justify-between border-2 border-rose-500">
+                <div class="text-xs font-extrabold text-rose-300">${ko ? '🌑 건물 뒤편 화물 통로' : '🌑 Dark Back Freight Alley'}</div>
+                <div class="my-2 flex items-center justify-around">
+                  ${pixelIcon('🗑️', 24)}
+                  ${pixelIcon('📦', 24)}
+                  ${pixelIcon('♿', 26)}
+                  ${pixelIcon('👶', 26)}
+                </div>
+                <div class="text-xs text-rose-200 text-center font-semibold">${ko ? '소외감과 낙인(Stigma) 발생' : 'Creates Isolation & Stigma'}</div>
+              </button>
+            </div>
+
+            <div class="text-xs sm:text-sm text-amber-200 bg-slate-900/95 px-3 py-1.5 border-2 border-amber-500/70 flex items-center justify-between z-10">
+              <span>${ko ? '🔑 단서 빈칸: 이 설계가 어긴 UD 제1원칙은 [ ㅇㅇ한 사용 ]' : '🔑 Clue Blank: Violated 1st Principle = [ ________ Use ]'}</span>
+              <span class="font-bold text-amber-300">Equitable Use</span>
+            </div>
+          `;
+        }
+      }
+    }
+
+    // =========================================================================
+    // 힌트 토글 및 정답 판정 로직
+    // =========================================================================
+    function toggleHint() {
+      sfxClick();
+      const stage = STAGES[currentStageIndex];
+      const langData = stage[currentLang];
+      const t = UI_TEXT[currentLang];
+      const hintBox = document.getElementById('hintBox');
+      if (!hintUsedStages[currentStageIndex] && !clearedStages[currentStageIndex]) {
+        hintUsedStages[currentStageIndex] = true;
+        updateScore(-5);
+        document.getElementById('hintBtnText').textContent = t.hintBtnOpen;
+      }
+      hintBox.innerHTML = langData.hint;
+      hintBox.classList.toggle('hidden');
+    }
+
+    function normalizeInput(str) {
+      return str.replace(/[\s\-_.,!?'"()\[\]/]/g, '').toLowerCase();
+    }
+
+    function checkAnswer() {
+      if (clearedStages[currentStageIndex]) return;
+
+      const inputEl = document.getElementById('answerInput');
+      const rawValue = inputEl.value.trim();
+      const normalized = normalizeInput(rawValue);
+      const feedbackBox = document.getElementById('feedbackBox');
+      const stage = STAGES[currentStageIndex];
+      const t = UI_TEXT[currentLang];
+
+      if (!normalized) {
+        sfxError();
+        feedbackBox.textContent = t.emptyInputAlert;
+        feedbackBox.className = 'p-3 text-sm font-bold leading-relaxed border-2 bg-rose-950 text-rose-200 border-rose-400';
+        feedbackBox.classList.remove('hidden');
+        return;
+      }
+
+      // 1. 공통 반대말(불공평, unfair 등) 또는 스테이지별 오답 보기 단어 체크
+      const hasNegation = GLOBAL_NEGATIONS.some(neg => normalized.includes(neg));
+      const stageForbidden = (stage.forbiddenWords || []).some(fw => normalized.includes(normalizeInput(fw)));
+
+      // 2. 반대말·오답보기가 없을 때 정답 키워드 포함 여부 판정 (문장형 서술 허용)
+      const isCorrect = !hasNegation && !stageForbidden && stage.answers.some(ans => {
+        const normAns = normalizeInput(ans);
+        return normalized.includes(normAns);
+      });
+
+      if (isCorrect) {
+        sfxSuccess();
+        clearedStages[currentStageIndex] = true;
+        feedbackBox.classList.add('hidden');
+        loadStage(currentStageIndex);
+        return;
+      }
+
+      // 3. 정답이 아닐 경우 스테이지별 함정(Trap) 키워드 검사
+      for (const trap of stage.traps) {
+        const matchedTrap = trap.keywords.some(k => normalized.includes(normalizeInput(k)));
+        if (matchedTrap) {
+          sfxError();
+          feedbackBox.textContent = '';
+          const badgeSpan = document.createElement('span');
+          badgeSpan.textContent = currentLang === 'ko' ? '🧐 아깝습니다! ' : '🧐 Almost there! ';
+          const msgSpan = document.createElement('span');
+          msgSpan.textContent = trap[currentLang] || trap.ko;
+          feedbackBox.appendChild(badgeSpan);
+          feedbackBox.appendChild(msgSpan);
+          feedbackBox.className = 'p-3 text-sm font-bold leading-relaxed border-2 bg-amber-950 text-amber-100 border-amber-400 shake-error';
+          feedbackBox.classList.remove('hidden');
+          return;
+        }
+      }
+
+      // 4. 일반 오답 처리 (XSS 방지를 위해 textContent 사용)
+      sfxError();
+      updateScore(-2);
+      feedbackBox.textContent = '';
+      const prefixSpan = document.createElement('span');
+      prefixSpan.textContent = t.wrongFeedbackPrefix;
+      const userValueSpan = document.createElement('span');
+      userValueSpan.className = 'underline text-white';
+      userValueSpan.textContent = `“${rawValue}”`;
+      const suffixSpan = document.createElement('span');
+      suffixSpan.textContent = t.wrongFeedbackSuffix;
+
+      feedbackBox.appendChild(prefixSpan);
+      feedbackBox.appendChild(userValueSpan);
+      feedbackBox.appendChild(suffixSpan);
+      feedbackBox.className = 'p-3 text-sm font-bold leading-relaxed border-2 bg-rose-950 text-rose-100 border-rose-400 shake-error';
+      feedbackBox.classList.remove('hidden');
+    }
+
+    function navigateStage(direction) {
+      const next = currentStageIndex + direction;
+      if (next >= 0 && next < STAGES.length && isStageUnlocked(next)) {
+        sfxClick();
+        loadStage(next);
+      }
+    }
+
+    function goNextStage() {
+      sfxClick();
+      if (currentStageIndex < STAGES.length - 1) {
+        loadStage(currentStageIndex + 1);
+      } else {
+        showEndingScreen(true);
+      }
+    }
+
+    // =========================================================================
+    // 엔딩 화면 (수료증 & 7대 원칙 전 과정 리포트)
+    // =========================================================================
+    function showEndingScreen(playFanfare = true) {
+      if (playFanfare) sfxSuccess();
+      const t = UI_TEXT[currentLang];
+      const ko = currentLang === 'ko';
+
+      document.getElementById('stageScreen').classList.add('hidden');
+      document.getElementById('endingScreen').classList.remove('hidden');
+
+      document.getElementById('endingTitle').textContent = t.endingTitle;
+      document.getElementById('endingSubtitle').innerHTML = t.endingSubtitle;
+      document.getElementById('endingScoreLabel').textContent = t.endingScoreLabel;
+      document.getElementById('endingRankLabel').textContent = t.endingRankLabel;
+      document.getElementById('finalScoreText').textContent = ko ? `${score}점` : `${score} pts`;
+
+      const rankEl = document.getElementById('finalRankText');
+      if (score >= 90) {
+        rankEl.innerHTML = `${pixelIcon('🌟', 20)}<span>${t.rank1}</span>`;
+      } else if (score >= 75) {
+        rankEl.innerHTML = `${pixelIcon('🎖️', 20)}<span>${t.rank2}</span>`;
+      } else {
+        rankEl.innerHTML = `${pixelIcon('🔍', 20)}<span>${t.rank3}</span>`;
+      }
+
+      document.getElementById('endingSummaryHeading').innerHTML = `${pixelIcon('📊', 20)} <span>${t.endingSummaryHeading}</span>`;
+      document.getElementById('endingTakeawayTitle').innerHTML = `${pixelIcon('💡', 20)} <span>${t.endingTakeawayTitle}</span>`;
+      document.getElementById('endingTakeawayBody').innerHTML = t.endingTakeawayBody;
+      document.getElementById('endingRestartBtn').innerHTML = `${pixelIcon('🔄', 18)} <span>${t.endingRestartBtn}</span>`;
+      document.getElementById('endingGuideBtn').innerHTML = `${pixelIcon('📘', 18)} <span>${t.endingGuideBtn}</span>`;
+
+      const summaryItems = ko
+        ? [
+            { stage: "Stage 1. 시립 도서관 입구", before: "쥐고 비틀어야 하는 둥근 문손잡이", after: "팔꿈치로도 열리는 레버형 손잡이", rule: "제6원칙: 적은 신체적 노력" },
+            { stage: "Stage 2. 무인 스마트 카페", before: "성인 서 있는 눈높이(165cm) 고정 키오스크", after: "모두의 눈높이에 맞춘 낮은 화면 모드", rule: "제2원칙: 사용상의 유연성" },
+            { stage: "Stage 3. 지하 쇼핑몰 비상벨", before: "소리로만 울리는 단일 감각 사이렌", after: "청각 사이렌 + 시각 경광등(점멸등)", rule: "제4원칙: 쉽게 인지할 수 있는 정보" },
+            { stage: "Stage 4. 지하철역 개찰구", before: "45cm 삼발이 회전 막대 개찰구", after: "90cm 이상 넓은 통로(광폭 자동 개찰구)", rule: "제7원칙: 접근과 사용을 위한 충분한 공간" },
+            { stage: "Stage 5. 지하철 환승역 노선도", before: "색상(초록·빨강)으로만 구분된 유도선", after: "색상 + 도형 기호(●·◆·■)·숫자·패턴 병기", rule: "제3원칙: 간단하고 직관적인 사용" },
+            { stage: "Stage 6. 광장 8차선 횡단보도", before: "신호가 바뀌면 도로 중앙선에 고립", after: "안전하게 쉬어가는 중앙 보행섬(교통섬)", rule: "제5원칙: 오류에 대한 포용력" },
+            { stage: "Stage 7. 시청 본관 출입구", before: "정문 계단 + 뒷문 화물용 승강기 분리", after: "모두가 정문으로 함께 들어가는 경사 광장", rule: "제1원칙: 공평한 사용" }
+          ]
+        : [
+            { stage: "Stage 1. City Library Entrance", before: "Round knob requiring grip & wrist twist", after: "Lever handle operable with an elbow", rule: "Principle 6: Low Physical Effort" },
+            { stage: "Stage 2. Self-Service Cafe", before: "Kiosk fixed at 165cm standing eye level", after: "Low Screen Mode within everyone's reach", rule: "Principle 2: Flexibility in Use" },
+            { stage: "Stage 3. Underground Mall Alarm", before: "Audio-only siren bell", after: "Audio siren + flashing visual strobe light", rule: "Principle 4: Perceptible Information" },
+            { stage: "Stage 4. Subway Station Gate", before: "45cm narrow tripod turnstile bars", after: "90cm+ Wide Accessible Flap Gate", rule: "Principle 7: Size and Space for Approach and Use" },
+            { stage: "Stage 5. Subway Transfer Station", before: "Guide lines distinguished only by color", after: "Colors paired with shapes (●·◆·■) & numbers", rule: "Principle 3: Simple and Intuitive Use" },
+            { stage: "Stage 6. 8-Lane Avenue Crosswalk", before: "Stranded on center line when signal turns red", after: "Protected central Pedestrian Refuge Island", rule: "Principle 5: Tolerance for Error" },
+            { stage: "Stage 7. City Hall Main Entrance", before: "Front stairs vs. back-alley freight elevator", after: "Integrated sloped plaza main entrance for all", rule: "Principle 1: Equitable Use" }
+          ];
+
+      const summaryGrid = document.getElementById('summaryGrid');
+      summaryGrid.innerHTML = summaryItems.map((item, idx) => `
+        <div class="bg-slate-900 border-2 border-slate-600 p-4 space-y-1.5 ${idx === 6 ? 'md:col-span-2' : ''}">
+          <div class="flex items-center justify-between">
+            <span class="font-black text-white">${item.stage}</span>
+            <span class="text-xs font-extrabold px-2 py-0.5 bg-sky-950 text-sky-300 border border-sky-500">${item.rule}</span>
+          </div>
+          <div class="text-rose-300 text-xs sm:text-sm font-medium inline-flex items-center gap-1.5">${pixelIcon('❌', 14)}<span>Before: ${item.before}</span></div>
+          <div class="text-emerald-300 text-xs sm:text-sm font-bold inline-flex items-center gap-1.5 block">${pixelIcon('✔', 14)}<span>After: ${item.after}</span></div>
+        </div>
+      `).join('');
+
+      renderStageDots();
+    }
+
+    function detectInitialLanguage() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const langParam = (params.get('lang') || '').toLowerCase();
+        if (langParam === 'en' || langParam === 'ko') {
+          return langParam;
+        }
+        const browserLang = (navigator.language || navigator.userLanguage || 'ko').toLowerCase();
+        return browserLang.startsWith('ko') ? 'ko' : 'en';
+      } catch (e) {
+        return 'ko';
+      }
+    }
+
+    // =========================================================================
+    // 화면 문구 속 이모지를 픽셀 아이콘으로 바꾸기
+    // - 글자(text node)만 바꾸고 속성값(title, aria-label 등)은 건드리지 않음
+    // - 화면이 새로 그려질 때마다 자동으로 적용
+    // =========================================================================
+    const PIXEL_EMOJI_RE = /\p{Extended_Pictographic}\uFE0F?(?:\u200D\p{Extended_Pictographic}\uFE0F?)*/gu;
+    const PIXEL_EMOJI_TEST = /\p{Extended_Pictographic}/u;
+
+    function spriteKeyFor(emoji) {
+      if (PIXEL_SPRITES[emoji]) return emoji;
+      const bare = emoji.replace(/\uFE0F/g, '');
+      if (PIXEL_SPRITES[bare]) return bare;
+      if (PIXEL_SPRITES[bare + '\uFE0F']) return bare + '\uFE0F';
+      return null;
+    }
+
+    function pixelifyTextNodes(root) {
+      if (!root || !root.ownerDocument && root !== document) return;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          const parent = node.parentNode;
+          if (!parent || (parent.closest && parent.closest('script, style, textarea, svg'))) return NodeFilter.FILTER_REJECT;
+          return PIXEL_EMOJI_TEST.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        }
+      });
+      const targets = [];
+      let current;
+      while ((current = walker.nextNode())) targets.push(current);
+
+      targets.forEach(node => {
+        const text = node.nodeValue;
+        const frag = document.createDocumentFragment();
+        let last = 0;
+        let changed = false;
+        PIXEL_EMOJI_RE.lastIndex = 0;
+        for (const match of text.matchAll(PIXEL_EMOJI_RE)) {
+          const key = spriteKeyFor(match[0]);
+          if (!key) continue;
+          if (match.index > last) frag.appendChild(document.createTextNode(text.slice(last, match.index)));
+          const wrap = document.createElement('span');
+          wrap.className = 'pixel-emoji';
+          wrap.innerHTML = pixelIcon(key, 18);
+          frag.appendChild(wrap);
+          last = match.index + match[0].length;
+          changed = true;
+        }
+        if (!changed) return;
+        if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    const pixelEmojiObserver = new MutationObserver(mutations => {
+      mutations.forEach(m => {
+        if (m.type === 'characterData') {
+          pixelifyTextNodes(m.target.parentNode);
+          return;
+        }
+        m.addedNodes.forEach(added => {
+          if (added.nodeType === 1) pixelifyTextNodes(added);
+          else if (added.nodeType === 3 && added.parentNode) pixelifyTextNodes(added.parentNode);
+        });
+      });
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      currentLang = detectInitialLanguage();
+      document.documentElement.lang = currentLang;
+      initShuffledChoices();
+      updateStaticUIText();
+      renderStageDots();
+      pixelifyTextNodes(document.body);
+      pixelEmojiObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
+  </script>
+</body>
+</html>
